@@ -54,7 +54,7 @@ function WizardContent() {
 
       const estimatedCredits = data.nationwide ? 50 : 10;
 
-      const { data: insertedSearch, error } = await supabase.from("searches").insert({
+      const { data: insertedSearch, error } = await supabase.from("searches").insert([{
         user_id: userId,
         business_type: data.businessType,
         nationwide: data.nationwide,
@@ -65,8 +65,8 @@ function WizardContent() {
         filters,
         credits_estimated: estimatedCredits,
         name: data.searchName || null,
-        status: "queued",
-      }).select("id").single();
+        status: "pending" as const,
+      }]).select("id").single();
 
       if (error || !insertedSearch) throw error || new Error("Falha ao criar busca");
 
