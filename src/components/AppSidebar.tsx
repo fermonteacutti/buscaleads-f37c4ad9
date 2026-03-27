@@ -86,7 +86,10 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="text-muted-foreground hover:text-destructive">
+            <SidebarMenuButton
+              className="text-muted-foreground hover:text-destructive"
+              onClick={async () => { await signOut(); navigate("/login"); }}
+            >
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Sair</span>}
             </SidebarMenuButton>
