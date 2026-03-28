@@ -64,6 +64,18 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://buscalead.ia.br/app',
+      },
+    });
+    if (error) {
+      toast.error(error.message || "Erro ao entrar com Google");
+    }
+  };
+
   // Tela de confirmação após envio do magic link
   if (magicLinkSent) {
     return (
