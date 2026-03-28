@@ -14,7 +14,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [showMagicLink, setShowMagicLink] = useState(false);
   const [email, setEmail] = useState("");
+  const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
@@ -44,20 +46,16 @@ export default function LoginPage() {
     }
   };
 
-  const handleMagicLink = async () => {
-    if (!email) {
-      toast.error("Digite seu e-mail primeiro");
-      return;
-    }
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
     setMagicLinkLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
-        email,
+        email: magicLinkEmail,
         options: { emailRedirectTo: `${window.location.origin}/app` },
       });
       if (error) throw error;
       setMagicLinkSent(true);
-      toast.success("Link enviado! Verifique seu e-mail para acessar.");
     } catch (err: any) {
       toast.error(err.message || "Erro ao enviar magic link");
     } finally {
@@ -65,6 +63,7 @@ export default function LoginPage() {
     }
   };
 
+  // Tela de confirmação após envio do magic link
   if (magicLinkSent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4">
@@ -79,11 +78,81 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-bold mb-2">Link enviado!</h1>
             <p className="text-muted-foreground mb-6">
-              Enviamos um link de acesso para <span className="font-medium text-foreground">{email}</span>. Verifique seu e-mail e clique no link para entrar.
+              Enviamos um link de acesso para <span className="font-medium text-foreground">{magicLinkEmail}</span>. Verifique seu e-mail e clique no link para entrar.
             </p>
-            <Button variant="outline" className="w-full" onClick={() => setMagicLinkSent(false)}>
+            <Button variant="outline" className="w-full" onClick={() => { setMagicLinkSent(false); setShowMagicLink(false); }}>
               Voltar ao login
             </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Tela dedicada do Magic Link
+  if (showMagicLink) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+                <Radar className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="text-foreground">Lead<span className="text-accent">Scan</span> PRO</span>
+            </Link>
+            <h1 className="text-2xl font-bold">Entrar com Magic Link</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Sem senha! Enviaremos um link seguro para seu e-mail.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-2xl border border-border bg-card shadow-medium">
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-primary/5 border border-primary/10 mb-6">
+              <Wand2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-1">Como funciona?</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Digite seu e-mail abaixo</li>
+                  <li>Receba um link seguro no e-mail</li>
+                  <li>Clique no link e acesse direto o dashboard</li>
+                </ol>
+              </div>
+            </div>
+
+            <form className="space-y-4" onSubmit={handleMagicLink}>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Seu e-mail</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    className="pl-10"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <Button variant="hero" className="w-full" type="submit" disabled={magicLinkLoading}>
+                {magicLinkLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Wand2 className="h-4 w-4 mr-1" />}
+                Enviar Magic Link
+              </Button>
+            </form>
+
+            <button
+              onClick={() => setShowMagicLink(false)}
+              className="w-full text-center mt-4 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              ← Voltar ao login com senha
+            </button>
           </div>
         </motion.div>
       </div>
@@ -181,8 +250,8 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button variant="outline" className="w-full" onClick={handleMagicLink} disabled={magicLinkLoading}>
-              {magicLinkLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
+            <Button variant="outline" className="w-full" onClick={() => setShowMagicLink(true)}>
+              <Wand2 className="h-4 w-4 mr-2" />
               Entrar com Magic Link
             </Button>
 
