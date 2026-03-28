@@ -5,7 +5,7 @@ import {
   Users,
   Download,
   CreditCard,
-  TrendingUp,
+  
   ArrowRight,
   Zap,
   Clock,
@@ -29,57 +29,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_OPTIONS } from "@/components/leads/lead-types";
 
-const chartData = [
-  { semana: "Sem 1", leads: 45 },
-  { semana: "Sem 2", leads: 78 },
-  { semana: "Sem 3", leads: 62 },
-  { semana: "Sem 4", leads: 120 },
-  { semana: "Sem 5", leads: 95 },
-  { semana: "Sem 6", leads: 140 },
-];
-
-const recentSearches = [
-  {
-    id: "1",
-    name: "Escritórios de Contabilidade",
-    location: "São Paulo, SP",
-    status: "completed" as const,
-    leads: 87,
-    date: "Hoje, 14:30",
-  },
-  {
-    id: "2",
-    name: "Clínicas Odontológicas",
-    location: "Rio de Janeiro, RJ",
-    status: "running" as const,
-    leads: 34,
-    date: "Hoje, 10:15",
-  },
-  {
-    id: "3",
-    name: "Academias e Studios",
-    location: "Belo Horizonte, MG",
-    status: "completed" as const,
-    leads: 156,
-    date: "Ontem, 18:00",
-  },
-  {
-    id: "4",
-    name: "Restaurantes e Bares",
-    location: "Curitiba, PR",
-    status: "failed" as const,
-    leads: 0,
-    date: "Ontem, 09:20",
-  },
-  {
-    id: "5",
-    name: "Imobiliárias",
-    location: "Florianópolis, SC",
-    status: "completed" as const,
-    leads: 64,
-    date: "3 dias atrás",
-  },
-];
+const formatSearchDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 0) return `Hoje, ${time}`;
+  if (diffDays === 1) return `Ontem, ${time}`;
+  return `${diffDays} dias atrás`;
+};
 
 const statusConfig = {
   completed: {
@@ -110,29 +69,69 @@ const item = {
 };
 
 export default function DashboardPage() {
-  const creditsUsed = 142;
-  const creditsTotal = 1000;
-  const creditsPercent = (creditsUsed / creditsTotal) * 100;
-
   const [funnelCounts, setFunnelCounts] = useState<Record<string, number>>({});
   const [totalLeads, setTotalLeads] = useState(0);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [totalSearches, setTotalSearches] = useState(0);
+  const [creditsUsed, setCreditsUsed] = useState(0);
+  const [recentSearchesData, setRecentSearchesData] = useState<any[]>([]);
+  const [weeklyChartData, setWeeklyChartData] = useState<{ semana: string; leads: number }[]>([]);
 
   useEffect(() => {
-    const fetchFunnelCounts = async () => {
-      const { data } = await supabase
-        .from("leads")
-        .select("funnel_status");
-
-      if (data) {
+    const fetchAll = async () => {
+      // Fetch leads + funnel counts
+      const { data: leadsData } = await supabase.from("leads").select("funnel_status, created_at");
+      if (leadsData) {
         const counts: Record<string, number> = {};
-        data.forEach((lead) => {
+        leadsData.forEach((lead) => {
           counts[lead.funnel_status] = (counts[lead.funnel_status] || 0) + 1;
         });
         setFunnelCounts(counts);
-        setTotalLeads(data.length);
+        setTotalLeads(leadsData.length);
+
+        // Build weekly chart from real data (last 6 weeks)
+        const now = new Date();
+        const weeks: { semana: string; leads: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - i * 7 - now.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 7);
+          const count = leadsData.filter((l) => {
+            const d = new Date(l.created_at);
+            return d >= weekStart && d < weekEnd;
+          }).length;
+          weeks.push({ semana: `Sem ${6 - i}`, leads: count });
+        }
+        setWeeklyChartData(weeks);
+      }
+
+      // Fetch credit balance
+      const { data: balanceData } = await supabase.from("credit_balances").select("balance").single();
+      if (balanceData) setCreditBalance(balanceData.balance);
+
+      // Fetch total credits used (sum of debits)
+      const { data: creditsData } = await supabase
+        .from("credits")
+        .select("amount")
+        .eq("transaction_type", "debit");
+      if (creditsData) {
+        const total = creditsData.reduce((sum, c) => sum + Math.abs(c.amount), 0);
+        setCreditsUsed(total);
+      }
+
+      // Fetch searches
+      const { data: searchesData } = await supabase
+        .from("searches")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (searchesData) {
+        setTotalSearches(searchesData.length);
+        setRecentSearchesData(searchesData.slice(0, 5));
       }
     };
-    fetchFunnelCounts();
+    fetchAll();
   }, []);
 
   return (
@@ -171,14 +170,14 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-3xl font-bold text-foreground">
-                {creditsTotal - creditsUsed}
+                {creditBalance}
               </p>
               <div className="mt-3 space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{creditsUsed} usados</span>
-                  <span>{creditsTotal} total</span>
+                  <span>{creditBalance + creditsUsed} total</span>
                 </div>
-                <Progress value={creditsPercent} className="h-1.5" />
+                <Progress value={creditsUsed > 0 ? (creditsUsed / (creditBalance + creditsUsed)) * 100 : 0} className="h-1.5" />
               </div>
             </CardContent>
           </Card>
@@ -195,9 +194,9 @@ export default function DashboardPage() {
                   <Users className="h-4 w-4 text-success" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-foreground">341</p>
-              <p className="text-xs text-success mt-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> +28% vs. semana passada
+              <p className="text-3xl font-bold text-foreground">{totalLeads}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de leads coletados
               </p>
             </CardContent>
           </Card>
@@ -214,9 +213,9 @@ export default function DashboardPage() {
                   <Search className="h-4 w-4 text-accent" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-foreground">12</p>
+              <p className="text-3xl font-bold text-foreground">{totalSearches}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Neste ciclo de 30 dias
+                Total de buscas realizadas
               </p>
             </CardContent>
           </Card>
@@ -295,7 +294,7 @@ export default function DashboardPage() {
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData}>
+                  <BarChart data={weeklyChartData}>
                     <CartesianGrid
                       strokeDasharray="3 3"
                       stroke="hsl(var(--border))"
@@ -376,37 +375,45 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentSearches.map((search) => {
-                const cfg = statusConfig[search.status];
-                const StatusIcon = cfg.icon;
-                return (
-                  <div
-                    key={search.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                      <Search className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {search.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {search.location} • {search.date}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={cfg.className}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {cfg.label}
-                    </Badge>
-                    {search.leads > 0 && (
-                      <span className="text-sm font-semibold text-foreground tabular-nums">
-                        {search.leads} leads
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              {recentSearchesData.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Nenhuma busca realizada ainda.</p>
+              ) : (
+                <div className="space-y-3">
+                  {recentSearchesData.map((search) => {
+                    const cfg = statusConfig[search.status as keyof typeof statusConfig];
+                    if (!cfg) return null;
+                    const StatusIcon = cfg.icon;
+                    const location = [search.location_city, search.location_state].filter(Boolean).join(", ") || (search.nationwide ? "Nacional" : "—");
+                    return (
+                      <div
+                        key={search.id}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                          <Search className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {search.name || search.business_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {location} • {formatSearchDate(search.created_at)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cfg.className}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {cfg.label}
+                        </Badge>
+                        {search.leads_found > 0 && (
+                          <span className="text-sm font-semibold text-foreground tabular-nums">
+                            {search.leads_found} leads
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
