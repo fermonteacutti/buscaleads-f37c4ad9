@@ -2,7 +2,8 @@ import { useWizard } from "./SearchWizardContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Filter, Mail, Phone, Globe, Share2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Filter, Mail, Phone, Globe, Share2, Users } from "lucide-react";
 
 const FILTERS = [
   { key: "hasEmail" as const, label: "Possui e-mail", description: "Apenas empresas com e-mail de contato", icon: Mail },
