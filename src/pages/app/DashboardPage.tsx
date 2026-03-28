@@ -235,9 +235,9 @@ export default function DashboardPage() {
                   <Users className="h-4 w-4 text-success" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-foreground">341</p>
-              <p className="text-xs text-success mt-1 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" /> +28% vs. semana passada
+              <p className="text-3xl font-bold text-foreground">{totalLeads}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Total de leads coletados
               </p>
             </CardContent>
           </Card>
