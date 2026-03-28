@@ -50,6 +50,7 @@ const App = () => (
               </Route>
             </Route>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
