@@ -103,7 +103,7 @@ export default function LoginPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
                 <Radar className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-foreground">Lead<span className="text-accent">Scan</span> PRO</span>
+              <span className="text-foreground">Busca<span className="text-accent">Lead</span></span>
             </Link>
             <h1 className="text-2xl font-bold">Entrar com Magic Link</h1>
             <p className="text-sm text-muted-foreground mt-1">
