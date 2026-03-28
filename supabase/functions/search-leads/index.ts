@@ -72,7 +72,34 @@ Deno.serve(async (req) => {
       .update({ status: "running", started_at: new Date().toISOString() })
       .eq("id", search_id);
 
-    // Debit credits
+    // Build Google Places Text Search query
+    let query = search.business_type;
+    if (!search.nationwide) {
+      if (search.location_city) query += ` em ${search.location_city}`;
+      if (search.location_state) query += `, ${search.location_state}`;
+    } else {
+      query += " no Brasil";
+    }
+
+    // Call Google Places API BEFORE debiting credits
+    const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=pt-BR&key=${googleApiKey}`;
+    const placesResponse = await fetch(placesUrl);
+    const placesData = await placesResponse.json();
+
+    if (placesData.status !== "OK" && placesData.status !== "ZERO_RESULTS") {
+      console.error("Google Places API error:", placesData);
+      await admin
+        .from("searches")
+        .update({ status: "failed", error_message: `Google API: ${placesData.status}` })
+        .eq("id", search_id);
+
+      return new Response(
+        JSON.stringify({ error: "Google Places API error", status: placesData.status }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Google API succeeded — now debit credits
     const { data: debitResult } = await admin.rpc("debit_credits", {
       p_user_id: userId,
       p_amount: search.credits_estimated,
@@ -92,37 +119,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build Google Places Text Search query
-    let query = search.business_type;
-    if (!search.nationwide) {
-      if (search.location_city) query += ` em ${search.location_city}`;
-      if (search.location_state) query += `, ${search.location_state}`;
-    } else {
-      query += " no Brasil";
-    }
-
-    // Call Google Places API (Text Search)
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=pt-BR&key=${googleApiKey}`;
-    const placesResponse = await fetch(placesUrl);
-    const placesData = await placesResponse.json();
-
-    if (placesData.status !== "OK" && placesData.status !== "ZERO_RESULTS") {
-      console.error("Google Places API error:", placesData);
-      await admin
-        .from("searches")
-        .update({ status: "failed", error_message: `Google API: ${placesData.status}` })
-        .eq("id", search_id);
-
-      return new Response(
-        JSON.stringify({ error: "Google Places API error", status: placesData.status }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const places = placesData.results || [];
     const leads = [];
 
-    // For each place, optionally get details (phone, website)
+    // For each place, get details (phone, website)
     for (const place of places.slice(0, 20)) {
       let phone = null;
       let website = null;
@@ -139,7 +139,6 @@ Deno.serve(async (req) => {
         console.error("Error fetching place details:", e);
       }
 
-      // Parse address components
       const addressParts = (place.formatted_address || "").split(",").map((s: string) => s.trim());
 
       leads.push({
