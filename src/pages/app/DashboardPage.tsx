@@ -134,9 +134,6 @@ export default function DashboardPage() {
     };
     fetchFunnelCounts();
   }, []);
-  const creditsUsed = 142;
-  const creditsTotal = 1000;
-  const creditsPercent = (creditsUsed / creditsTotal) * 100;
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
