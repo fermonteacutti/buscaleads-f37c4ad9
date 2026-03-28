@@ -195,7 +195,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-3" onSubmit={handleSubmit}>
             {isSignUp && (
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Nome completo</label>
