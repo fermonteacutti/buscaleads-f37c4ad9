@@ -103,6 +103,23 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <Tooltip>
               <TooltipTrigger asChild>
+                <SidebarMenuButton asChild className="text-muted-foreground hover:text-foreground">
+                  <a href="/">
+                    <ExternalLink className="h-4 w-4" />
+                    {!collapsed && <span>Voltar ao site</span>}
+                  </a>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  Voltar ao site
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <Tooltip>
+              <TooltipTrigger asChild>
                 <SidebarMenuButton
                   className="text-muted-foreground hover:text-destructive"
                   onClick={async () => { await signOut(); navigate("/login"); }}
