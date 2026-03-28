@@ -416,37 +416,45 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentSearches.map((search) => {
-                const cfg = statusConfig[search.status];
-                const StatusIcon = cfg.icon;
-                return (
-                  <div
-                    key={search.id}
-                    className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
-                      <Search className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {search.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {search.location} • {search.date}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className={cfg.className}>
-                      <StatusIcon className="h-3 w-3 mr-1" />
-                      {cfg.label}
-                    </Badge>
-                    {search.leads > 0 && (
-                      <span className="text-sm font-semibold text-foreground tabular-nums">
-                        {search.leads} leads
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              {recentSearchesData.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">Nenhuma busca realizada ainda.</p>
+              ) : (
+                <div className="space-y-3">
+                  {recentSearchesData.map((search) => {
+                    const cfg = statusConfig[search.status as keyof typeof statusConfig];
+                    if (!cfg) return null;
+                    const StatusIcon = cfg.icon;
+                    const location = [search.location_city, search.location_state].filter(Boolean).join(", ") || (search.nationwide ? "Nacional" : "—");
+                    return (
+                      <div
+                        key={search.id}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+                          <Search className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {search.name || search.business_type}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {location} • {formatSearchDate(search.created_at)}
+                          </p>
+                        </div>
+                        <Badge variant="outline" className={cfg.className}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {cfg.label}
+                        </Badge>
+                        {search.leads_found > 0 && (
+                          <span className="text-sm font-semibold text-foreground tabular-nums">
+                            {search.leads_found} leads
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
