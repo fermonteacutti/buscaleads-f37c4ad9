@@ -5,7 +5,7 @@ import {
   Users,
   Download,
   CreditCard,
-  // TrendingUp removed - was used for static data
+  
   ArrowRight,
   Zap,
   Clock,
