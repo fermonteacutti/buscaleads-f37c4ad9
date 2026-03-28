@@ -244,7 +244,7 @@ export default function LoginPage() {
             </p>
           )}
 
-          <div className="relative my-6">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">ou continue com</span></div>
           </div>
