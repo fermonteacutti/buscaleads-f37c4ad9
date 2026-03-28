@@ -180,7 +180,7 @@ export default function LoginPage() {
         </div>
 
         <div className="p-6 rounded-2xl border border-border bg-card shadow-medium">
-          <div className="flex mb-6 bg-muted rounded-lg p-1">
+          <div className="flex mb-4 bg-muted rounded-lg p-1">
             <button
               onClick={() => setIsSignUp(false)}
               className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${!isSignUp ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
