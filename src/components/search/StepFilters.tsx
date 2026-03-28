@@ -2,7 +2,8 @@ import { useWizard } from "./SearchWizardContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Filter, Mail, Phone, Globe, Share2 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Filter, Mail, Phone, Globe, Share2, Users } from "lucide-react";
 
 const FILTERS = [
   { key: "hasEmail" as const, label: "Possui e-mail", description: "Apenas empresas com e-mail de contato", icon: Mail },
@@ -37,6 +38,34 @@ export default function StepFilters() {
             />
           </div>
         ))}
+      </div>
+
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-primary" />
+          <Label className="text-sm font-medium">Quantidade de leads desejados</Label>
+        </div>
+        <RadioGroup
+          value={String(data.maxLeads)}
+          onValueChange={(v) => updateData({ maxLeads: Number(v) })}
+          className="grid grid-cols-4 gap-2"
+        >
+          {[20, 50, 100, 200].map((n) => (
+            <Label
+              key={n}
+              htmlFor={`qty-${n}`}
+              className={`flex items-center justify-center gap-2 rounded-xl border p-3 cursor-pointer transition-colors ${
+                data.maxLeads === n
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:border-primary/50"
+              }`}
+            >
+              <RadioGroupItem value={String(n)} id={`qty-${n}`} className="sr-only" />
+              <span className="text-sm font-semibold">{n}</span>
+            </Label>
+          ))}
+        </RadioGroup>
+        <p className="text-xs text-muted-foreground">Leads duplicados de buscas anteriores serão ignorados automaticamente.</p>
       </div>
 
       <div className="space-y-2 pt-2">

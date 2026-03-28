@@ -52,7 +52,7 @@ function WizardContent() {
       if (data.hasWebsite) filters.hasWebsite = true;
       if (data.hasSocialMedia) filters.hasSocialMedia = true;
 
-      const estimatedCredits = data.nationwide ? 50 : 10;
+      const estimatedCredits = data.maxLeads;
 
       const { data: insertedSearch, error } = await supabase.from("searches").insert([{
         user_id: userId,
@@ -74,7 +74,7 @@ function WizardContent() {
 
       // Invoke edge function to search leads
       const { data: result, error: fnError } = await supabase.functions.invoke("search-leads", {
-        body: { search_id: insertedSearch.id },
+        body: { search_id: insertedSearch.id, max_leads: data.maxLeads },
       });
 
       if (fnError) {

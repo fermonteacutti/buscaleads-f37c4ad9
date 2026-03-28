@@ -17,6 +17,7 @@ export interface SearchFormData {
   hasWebsite: boolean;
   hasSocialMedia: boolean;
   searchName: string;
+  maxLeads: number;
 }
 
 const defaultData: SearchFormData = {
@@ -32,6 +33,7 @@ const defaultData: SearchFormData = {
   hasWebsite: false,
   hasSocialMedia: false,
   searchName: "",
+  maxLeads: 20,
 };
 
 interface WizardContextType {

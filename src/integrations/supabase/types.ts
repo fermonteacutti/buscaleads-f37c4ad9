@@ -112,6 +112,7 @@ export type Database = {
           email: string | null
           facebook_url: string | null
           funnel_status: Database["public"]["Enums"]["lead_funnel_status"]
+          google_place_id: string | null
           id: string
           instagram_url: string | null
           linkedin_url: string | null
@@ -138,6 +139,7 @@ export type Database = {
           email?: string | null
           facebook_url?: string | null
           funnel_status?: Database["public"]["Enums"]["lead_funnel_status"]
+          google_place_id?: string | null
           id?: string
           instagram_url?: string | null
           linkedin_url?: string | null
@@ -164,6 +166,7 @@ export type Database = {
           email?: string | null
           facebook_url?: string | null
           funnel_status?: Database["public"]["Enums"]["lead_funnel_status"]
+          google_place_id?: string | null
           id?: string
           instagram_url?: string | null
           linkedin_url?: string | null

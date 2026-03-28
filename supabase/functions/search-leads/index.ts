@@ -12,7 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
     const googleApiKey = Deno.env.get("GOOGLE_PLACES_API_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 
-    // Verify user
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
@@ -39,8 +37,7 @@ Deno.serve(async (req) => {
     }
     const userId = claimsData.user.id;
 
-    // Parse body
-    const { search_id } = await req.json();
+    const { search_id, max_leads } = await req.json();
     if (!search_id) {
       return new Response(JSON.stringify({ error: "search_id is required" }), {
         status: 400,
@@ -48,10 +45,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Admin client for DB operations
+    const desiredLeads = Math.min(Math.max(max_leads || 20, 1), 200);
+
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get search details
     const { data: search, error: searchError } = await admin
       .from("searches")
       .select("*")
@@ -66,13 +63,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Update search status to running
     await admin
       .from("searches")
       .update({ status: "running", started_at: new Date().toISOString() })
       .eq("id", search_id);
 
-    // Build Google Places Text Search query
+    // Build query
     let query = search.business_type;
     if (!search.nationwide) {
       if (search.location_city) query += ` em ${search.location_city}`;
@@ -81,49 +77,49 @@ Deno.serve(async (req) => {
       query += " no Brasil";
     }
 
-    // Call Google Places API BEFORE debiting credits
-    const placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=pt-BR&key=${googleApiKey}`;
-    const placesResponse = await fetch(placesUrl);
-    const placesData = await placesResponse.json();
+    // Fetch places with pagination (Google returns up to 20 per page, max 60 total via next_page_token)
+    const allPlaces: any[] = [];
+    let nextPageToken: string | null = null;
+    const maxPages = Math.ceil(desiredLeads / 20);
 
-    if (placesData.status !== "OK" && placesData.status !== "ZERO_RESULTS") {
-      console.error("Google Places API error:", placesData);
-      await admin
-        .from("searches")
-        .update({ status: "failed", error_message: `Google API: ${placesData.status}` })
-        .eq("id", search_id);
+    for (let page = 0; page < maxPages; page++) {
+      let placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=pt-BR&key=${googleApiKey}`;
+      if (nextPageToken) {
+        placesUrl += `&pagetoken=${nextPageToken}`;
+      }
 
-      return new Response(
-        JSON.stringify({ error: "Google Places API error", status: placesData.status }),
-        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      const placesResponse = await fetch(placesUrl);
+      const placesData = await placesResponse.json();
+
+      if (placesData.status !== "OK" && placesData.status !== "ZERO_RESULTS") {
+        if (page === 0) {
+          console.error("Google Places API error:", placesData);
+          await admin
+            .from("searches")
+            .update({ status: "failed", error_message: `Google API: ${placesData.status}` })
+            .eq("id", search_id);
+          return new Response(
+            JSON.stringify({ error: "Google Places API error", status: placesData.status }),
+            { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        break;
+      }
+
+      allPlaces.push(...(placesData.results || []));
+
+      if (allPlaces.length >= desiredLeads || !placesData.next_page_token) break;
+
+      nextPageToken = placesData.next_page_token;
+      // Google requires a short delay before using next_page_token
+      await new Promise((r) => setTimeout(r, 2000));
     }
 
-    // Google API succeeded — now debit credits
-    const { data: debitResult } = await admin.rpc("debit_credits", {
-      p_user_id: userId,
-      p_amount: search.credits_estimated,
-      p_description: `Busca: ${search.business_type}`,
-      p_reference_id: search_id,
-    });
+    const places = allPlaces.slice(0, desiredLeads);
 
-    if (debitResult && !(debitResult as any).success) {
-      await admin
-        .from("searches")
-        .update({ status: "failed", error_message: "Créditos insuficientes" })
-        .eq("id", search_id);
-
-      return new Response(
-        JSON.stringify({ error: "Créditos insuficientes", details: debitResult }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const places = placesData.results || [];
+    // Build leads with google_place_id
     const leads = [];
-
-    // For each place, get details (phone, website)
-    for (const place of places.slice(0, 20)) {
+    for (const place of places) {
       let phone = null;
       let website = null;
 
@@ -144,6 +140,7 @@ Deno.serve(async (req) => {
       leads.push({
         user_id: userId,
         search_id: search_id,
+        google_place_id: place.place_id || null,
         company_name: place.name || null,
         address: place.formatted_address || null,
         city: addressParts.length >= 3 ? addressParts[addressParts.length - 3] : null,
@@ -157,12 +154,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert leads
+    // Insert leads with ON CONFLICT DO NOTHING (dedup by user_id + google_place_id)
     let leadsInserted = 0;
     if (leads.length > 0) {
       const { data: insertedLeads, error: insertError } = await admin
         .from("leads")
-        .insert(leads)
+        .upsert(leads, { onConflict: "user_id,google_place_id", ignoreDuplicates: true })
         .select("id");
 
       if (insertError) {
@@ -172,19 +169,41 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Update search as completed
+    // Charge credits only for NEW leads actually inserted
+    const creditsToCharge = leadsInserted;
+
+    if (creditsToCharge > 0) {
+      const { data: debitResult } = await admin.rpc("debit_credits", {
+        p_user_id: userId,
+        p_amount: creditsToCharge,
+        p_description: `Busca: ${search.business_type} (${leadsInserted} leads)`,
+        p_reference_id: search_id,
+      });
+
+      if (debitResult && !(debitResult as any).success) {
+        await admin
+          .from("searches")
+          .update({ status: "failed", error_message: "Créditos insuficientes" })
+          .eq("id", search_id);
+        return new Response(
+          JSON.stringify({ error: "Créditos insuficientes", details: debitResult }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     await admin
       .from("searches")
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
         leads_found: leadsInserted,
-        credits_used: search.credits_estimated,
+        credits_used: creditsToCharge,
       })
       .eq("id", search_id);
 
     return new Response(
-      JSON.stringify({ success: true, leads_found: leadsInserted }),
+      JSON.stringify({ success: true, leads_found: leadsInserted, duplicates_skipped: leads.length - leadsInserted }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

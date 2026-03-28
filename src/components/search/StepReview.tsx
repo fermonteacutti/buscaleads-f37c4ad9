@@ -6,9 +6,7 @@ import { CheckCircle2, MapPin, Database, Filter, Zap } from "lucide-react";
 export default function StepReview() {
   const { data } = useWizard();
 
-  const bothSources = data.sources.includes("redes_sociais") && data.sources.includes("cnpj");
-  const baseCredits = data.sources.length * (data.nationwide ? 50 : 10);
-  const estimatedCredits = bothSources ? Math.ceil(baseCredits * 1.5) : baseCredits;
+  const estimatedCredits = data.maxLeads;
 
   return (
     <div className="space-y-6">
@@ -85,8 +83,8 @@ export default function StepReview() {
         <div className="flex items-center gap-2">
           <Zap className="h-5 w-5 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Créditos estimados</p>
-            <p className="text-xs text-muted-foreground">Consumo aproximado para esta busca</p>
+            <p className="text-sm font-semibold text-foreground">Créditos estimados (máx.)</p>
+            <p className="text-xs text-muted-foreground">Até {data.maxLeads} leads — duplicados não consomem créditos</p>
           </div>
         </div>
         <span className="text-2xl font-bold text-primary">{estimatedCredits}</span>
