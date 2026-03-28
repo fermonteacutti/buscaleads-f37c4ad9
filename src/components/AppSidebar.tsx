@@ -44,7 +44,11 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário";
+  const userEmail = user?.email || "";
+  const avatarUrl = user?.user_metadata?.avatar_url || "";
+  const initials = userName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
   const isActive = (path: string) =>
     path === "/app"
       ? location.pathname === "/app"
