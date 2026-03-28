@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -25,6 +26,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { FUNNEL_OPTIONS } from "@/components/leads/lead-types";
 
 const chartData = [
   { semana: "Sem 1", leads: 45 },
@@ -107,6 +110,30 @@ const item = {
 };
 
 export default function DashboardPage() {
+  const creditsUsed = 142;
+  const creditsTotal = 1000;
+  const creditsPercent = (creditsUsed / creditsTotal) * 100;
+
+  const [funnelCounts, setFunnelCounts] = useState<Record<string, number>>({});
+  const [totalLeads, setTotalLeads] = useState(0);
+
+  useEffect(() => {
+    const fetchFunnelCounts = async () => {
+      const { data } = await supabase
+        .from("leads")
+        .select("funnel_status");
+
+      if (data) {
+        const counts: Record<string, number> = {};
+        data.forEach((lead) => {
+          counts[lead.funnel_status] = (counts[lead.funnel_status] || 0) + 1;
+        });
+        setFunnelCounts(counts);
+        setTotalLeads(data.length);
+      }
+    };
+    fetchFunnelCounts();
+  }, []);
   const creditsUsed = 142;
   const creditsTotal = 1000;
   const creditsPercent = (creditsUsed / creditsTotal) * 100;
