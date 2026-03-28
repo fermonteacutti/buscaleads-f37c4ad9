@@ -14,6 +14,7 @@ import ContactPage from "./pages/ContactPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import LoginPage from "./pages/LoginPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import DashboardPage from "./pages/app/DashboardPage";
 import SearchPage from "./pages/app/SearchPage";
 import LeadsPage from "./pages/app/LeadsPage";
@@ -49,6 +50,7 @@ const App = () => (
               </Route>
             </Route>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
