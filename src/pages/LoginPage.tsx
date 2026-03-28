@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
