@@ -6,6 +6,7 @@ import {
   Settings,
   Radar,
   LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -99,6 +100,23 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
+          <SidebarMenuItem>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuButton asChild className="text-muted-foreground hover:text-foreground">
+                  <a href="/">
+                    <ExternalLink className="h-4 w-4" />
+                    {!collapsed && <span>Voltar ao site</span>}
+                  </a>
+                </SidebarMenuButton>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">
+                  Voltar ao site
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <Tooltip>
               <TooltipTrigger asChild>
