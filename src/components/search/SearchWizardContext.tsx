@@ -17,6 +17,7 @@ export interface SearchFormData {
   hasWebsite: boolean;
   hasSocialMedia: boolean;
   searchName: string;
+  maxLeads: number;
 }
 
 const defaultData: SearchFormData = {
