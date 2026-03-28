@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Lead, funnelLabel } from "./lead-types";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FUNNEL_OPTIONS } from "./lead-types";
 import { cn } from "@/lib/utils";
-import { Building2, Mail, Phone, Globe, MapPin } from "lucide-react";
+import { Building2, Mail, Phone, Globe, MapPin, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import LeadDetailSheet from "./LeadDetailSheet";
 
 interface Props {
@@ -16,6 +18,7 @@ interface Props {
 
 export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Props) {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const navigate = useNavigate();
 
   if (leads.length === 0) {
     return (
@@ -23,6 +26,9 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
         <Building2 className="h-12 w-12 text-muted-foreground/40 mb-3" />
         <p className="text-sm font-medium text-muted-foreground">Nenhum lead encontrado</p>
         <p className="text-xs text-muted-foreground/70 mt-1">Ajuste os filtros ou inicie uma nova busca.</p>
+        <Button variant="default" size="sm" className="mt-4" onClick={() => navigate("/app/search")}>
+          <Search className="h-4 w-4 mr-1" /> Nova Busca
+        </Button>
       </div>
     );
   }
