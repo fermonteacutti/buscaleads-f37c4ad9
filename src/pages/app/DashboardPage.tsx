@@ -254,9 +254,9 @@ export default function DashboardPage() {
                   <Search className="h-4 w-4 text-accent" />
                 </div>
               </div>
-              <p className="text-3xl font-bold text-foreground">12</p>
+              <p className="text-3xl font-bold text-foreground">{totalSearches}</p>
               <p className="text-xs text-muted-foreground mt-1">
-                Neste ciclo de 30 dias
+                Total de buscas realizadas
               </p>
             </CardContent>
           </Card>
