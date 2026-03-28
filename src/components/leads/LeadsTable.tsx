@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FUNNEL_OPTIONS } from "./lead-types";
 import { cn } from "@/lib/utils";
-import { Building2, Mail, Phone, Globe, MapPin } from "lucide-react";
+import { Building2, Mail, Phone, Globe, MapPin, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import LeadDetailSheet from "./LeadDetailSheet";
 
 interface Props {
