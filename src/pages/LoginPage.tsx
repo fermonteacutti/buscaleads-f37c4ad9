@@ -239,9 +239,7 @@ export default function LoginPage() {
           </form>
 
           {!isSignUp && (
-            <p className="text-center mt-4">
-              <button className="text-xs text-primary hover:underline">Esqueci minha senha</button>
-            </p>
+            <ForgotPasswordDialog />
           )}
 
           <div className="relative my-4">
