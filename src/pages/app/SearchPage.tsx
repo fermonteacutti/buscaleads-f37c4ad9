@@ -74,7 +74,7 @@ function WizardContent() {
 
       // Invoke edge function to search leads
       const { data: result, error: fnError } = await supabase.functions.invoke("search-leads", {
-        body: { search_id: insertedSearch.id },
+        body: { search_id: insertedSearch.id, max_leads: data.maxLeads },
       });
 
       if (fnError) {
