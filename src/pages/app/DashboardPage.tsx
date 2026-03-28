@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -25,6 +26,8 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { FUNNEL_OPTIONS } from "@/components/leads/lead-types";
 
 const chartData = [
   { semana: "Sem 1", leads: 45 },
@@ -110,6 +113,27 @@ export default function DashboardPage() {
   const creditsUsed = 142;
   const creditsTotal = 1000;
   const creditsPercent = (creditsUsed / creditsTotal) * 100;
+
+  const [funnelCounts, setFunnelCounts] = useState<Record<string, number>>({});
+  const [totalLeads, setTotalLeads] = useState(0);
+
+  useEffect(() => {
+    const fetchFunnelCounts = async () => {
+      const { data } = await supabase
+        .from("leads")
+        .select("funnel_status");
+
+      if (data) {
+        const counts: Record<string, number> = {};
+        data.forEach((lead) => {
+          counts[lead.funnel_status] = (counts[lead.funnel_status] || 0) + 1;
+        });
+        setFunnelCounts(counts);
+        setTotalLeads(data.length);
+      }
+    };
+    fetchFunnelCounts();
+  }, []);
 
   return (
     <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
@@ -216,6 +240,42 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </motion.div>
+      </motion.div>
+
+      {/* Funnel Status Counter */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              Leads por Status do Funil
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {FUNNEL_OPTIONS.map((opt) => {
+                const count = funnelCounts[opt.value] || 0;
+                const percent = totalLeads > 0 ? Math.round((count / totalLeads) * 100) : 0;
+                return (
+                  <div
+                    key={opt.value}
+                    className={`rounded-lg border p-3 text-center ${opt.color}`}
+                  >
+                    <p className="text-2xl font-bold">{count}</p>
+                    <p className="text-xs font-medium mt-1">{opt.label}</p>
+                    <p className="text-[10px] opacity-70 mt-0.5">{percent}%</p>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-muted-foreground mt-3 text-right">
+              Total: {totalLeads} lead{totalLeads !== 1 && "s"}
+            </p>
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Chart + Plan Card */}
