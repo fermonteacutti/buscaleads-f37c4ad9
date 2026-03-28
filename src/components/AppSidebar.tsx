@@ -105,6 +105,28 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
+          {/* User info */}
+          <SidebarMenuItem>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className={`flex items-center gap-3 px-2 py-2 ${collapsed ? "justify-center" : ""}`}>
+                  <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarImage src={avatarUrl} alt={userName} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">{initials}</AvatarFallback>
+                  </Avatar>
+                  {!collapsed && (
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-medium text-foreground truncate">{userName}</span>
+                      <span className="text-xs text-muted-foreground truncate">{userEmail}</span>
+                    </div>
+                  )}
+                </div>
+              </TooltipTrigger>
+              {collapsed && (
+                <TooltipContent side="right">{userName}</TooltipContent>
+              )}
+            </Tooltip>
+          </SidebarMenuItem>
           <SidebarMenuItem>
             <Tooltip>
               <TooltipTrigger asChild>
