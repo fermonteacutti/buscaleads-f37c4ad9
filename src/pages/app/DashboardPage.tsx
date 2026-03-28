@@ -29,57 +29,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_OPTIONS } from "@/components/leads/lead-types";
 
-const chartData = [
-  { semana: "Sem 1", leads: 45 },
-  { semana: "Sem 2", leads: 78 },
-  { semana: "Sem 3", leads: 62 },
-  { semana: "Sem 4", leads: 120 },
-  { semana: "Sem 5", leads: 95 },
-  { semana: "Sem 6", leads: 140 },
-];
-
-const recentSearches = [
-  {
-    id: "1",
-    name: "Escritórios de Contabilidade",
-    location: "São Paulo, SP",
-    status: "completed" as const,
-    leads: 87,
-    date: "Hoje, 14:30",
-  },
-  {
-    id: "2",
-    name: "Clínicas Odontológicas",
-    location: "Rio de Janeiro, RJ",
-    status: "running" as const,
-    leads: 34,
-    date: "Hoje, 10:15",
-  },
-  {
-    id: "3",
-    name: "Academias e Studios",
-    location: "Belo Horizonte, MG",
-    status: "completed" as const,
-    leads: 156,
-    date: "Ontem, 18:00",
-  },
-  {
-    id: "4",
-    name: "Restaurantes e Bares",
-    location: "Curitiba, PR",
-    status: "failed" as const,
-    leads: 0,
-    date: "Ontem, 09:20",
-  },
-  {
-    id: "5",
-    name: "Imobiliárias",
-    location: "Florianópolis, SC",
-    status: "completed" as const,
-    leads: 64,
-    date: "3 dias atrás",
-  },
-];
+const formatSearchDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const time = date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 0) return `Hoje, ${time}`;
+  if (diffDays === 1) return `Ontem, ${time}`;
+  return `${diffDays} dias atrás`;
+};
 
 const statusConfig = {
   completed: {
