@@ -10,7 +10,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { User, Building2, Phone, Lock, Webhook, Key, Bell, Copy, Eye, EyeOff, RefreshCw, Plus, Trash2 } from "lucide-react";
+import { User, Building2, Phone, Lock, Webhook, Key, Bell } from "lucide-react";
+import ApiTab from "@/components/settings/ApiTab";
 
 export default function SettingsPage() {
   const { user } = useAuth();
