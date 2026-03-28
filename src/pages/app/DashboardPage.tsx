@@ -211,14 +211,14 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-3xl font-bold text-foreground">
-                {creditsTotal - creditsUsed}
+                {creditBalance}
               </p>
               <div className="mt-3 space-y-1.5">
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>{creditsUsed} usados</span>
-                  <span>{creditsTotal} total</span>
+                  <span>{creditBalance + creditsUsed} total</span>
                 </div>
-                <Progress value={creditsPercent} className="h-1.5" />
+                <Progress value={creditsUsed > 0 ? (creditsUsed / (creditBalance + creditsUsed)) * 100 : 0} className="h-1.5" />
               </div>
             </CardContent>
           </Card>
