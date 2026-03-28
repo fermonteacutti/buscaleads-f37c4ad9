@@ -110,29 +110,69 @@ const item = {
 };
 
 export default function DashboardPage() {
-  const creditsUsed = 142;
-  const creditsTotal = 1000;
-  const creditsPercent = (creditsUsed / creditsTotal) * 100;
-
   const [funnelCounts, setFunnelCounts] = useState<Record<string, number>>({});
   const [totalLeads, setTotalLeads] = useState(0);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [totalSearches, setTotalSearches] = useState(0);
+  const [creditsUsed, setCreditsUsed] = useState(0);
+  const [recentSearchesData, setRecentSearchesData] = useState<any[]>([]);
+  const [weeklyChartData, setWeeklyChartData] = useState<{ semana: string; leads: number }[]>([]);
 
   useEffect(() => {
-    const fetchFunnelCounts = async () => {
-      const { data } = await supabase
-        .from("leads")
-        .select("funnel_status");
-
-      if (data) {
+    const fetchAll = async () => {
+      // Fetch leads + funnel counts
+      const { data: leadsData } = await supabase.from("leads").select("funnel_status, created_at");
+      if (leadsData) {
         const counts: Record<string, number> = {};
-        data.forEach((lead) => {
+        leadsData.forEach((lead) => {
           counts[lead.funnel_status] = (counts[lead.funnel_status] || 0) + 1;
         });
         setFunnelCounts(counts);
-        setTotalLeads(data.length);
+        setTotalLeads(leadsData.length);
+
+        // Build weekly chart from real data (last 6 weeks)
+        const now = new Date();
+        const weeks: { semana: string; leads: number }[] = [];
+        for (let i = 5; i >= 0; i--) {
+          const weekStart = new Date(now);
+          weekStart.setDate(now.getDate() - i * 7 - now.getDay());
+          weekStart.setHours(0, 0, 0, 0);
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 7);
+          const count = leadsData.filter((l) => {
+            const d = new Date(l.created_at);
+            return d >= weekStart && d < weekEnd;
+          }).length;
+          weeks.push({ semana: `Sem ${6 - i}`, leads: count });
+        }
+        setWeeklyChartData(weeks);
+      }
+
+      // Fetch credit balance
+      const { data: balanceData } = await supabase.from("credit_balances").select("balance").single();
+      if (balanceData) setCreditBalance(balanceData.balance);
+
+      // Fetch total credits used (sum of debits)
+      const { data: creditsData } = await supabase
+        .from("credits")
+        .select("amount")
+        .eq("transaction_type", "debit");
+      if (creditsData) {
+        const total = creditsData.reduce((sum, c) => sum + Math.abs(c.amount), 0);
+        setCreditsUsed(total);
+      }
+
+      // Fetch searches
+      const { data: searchesData } = await supabase
+        .from("searches")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (searchesData) {
+        setTotalSearches(searchesData.length);
+        setRecentSearchesData(searchesData.slice(0, 5));
       }
     };
-    fetchFunnelCounts();
+    fetchAll();
   }, []);
 
   return (
