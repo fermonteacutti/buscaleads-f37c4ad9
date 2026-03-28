@@ -33,6 +33,7 @@ const defaultData: SearchFormData = {
   hasWebsite: false,
   hasSocialMedia: false,
   searchName: "",
+  maxLeads: 20,
 };
 
 interface WizardContextType {
