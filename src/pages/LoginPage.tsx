@@ -160,27 +160,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 py-4 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl mb-6">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-              <Radar className="h-5 w-5 text-primary-foreground" />
+        <div className="text-center mb-4">
+          <Link to="/" className="inline-flex items-center gap-2 font-bold text-xl mb-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <Radar className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="text-foreground">Busca<span className="text-accent">Lead</span></span>
           </Link>
-          <h1 className="text-2xl font-bold">{isSignUp ? "Crie sua conta" : "Bem-vindo de volta"}</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl font-bold">{isSignUp ? "Crie sua conta" : "Bem-vindo de volta"}</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             {isSignUp ? "Comece seus 7 dias gratuitos" : "Entre na sua conta"}
           </p>
         </div>
 
-        <div className="p-8 rounded-2xl border border-border bg-card shadow-medium">
-          <div className="flex mb-6 bg-muted rounded-lg p-1">
+        <div className="p-6 rounded-2xl border border-border bg-card shadow-medium">
+          <div className="flex mb-4 bg-muted rounded-lg p-1">
             <button
               onClick={() => setIsSignUp(false)}
               className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${!isSignUp ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
@@ -195,7 +195,7 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form className="space-y-3" onSubmit={handleSubmit}>
             {isSignUp && (
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Nome completo</label>
@@ -244,7 +244,7 @@ export default function LoginPage() {
             </p>
           )}
 
-          <div className="relative my-6">
+          <div className="relative my-4">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">ou continue com</span></div>
           </div>
