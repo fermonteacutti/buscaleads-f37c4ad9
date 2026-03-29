@@ -131,12 +131,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <div className={`px-2 ${collapsed ? "flex justify-center" : ""}`}>
               <CreditsBadge />
-                </div>
-              </TooltipTrigger>
-              {collapsed && (
-                <TooltipContent side="right">{userName}</TooltipContent>
-              )}
-            </Tooltip>
+            </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Tooltip>
