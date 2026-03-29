@@ -94,7 +94,38 @@ const creditPacks = [
 export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
   const { isAdmin } = useIsAdmin();
+  const { balance, fetchBalance } = useCredits();
+  const navigate = useNavigate();
+  const initialBalance = useRef<number | null>(null);
+
+  // Polling: when awaitingPayment, check balance every 5s
+  useEffect(() => {
+    if (!awaitingPayment) return;
+    initialBalance.current = balance;
+
+    const interval = setInterval(async () => {
+      await fetchBalance();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [awaitingPayment, fetchBalance]);
+
+  // Detect balance increase → success
+  useEffect(() => {
+    if (!awaitingPayment || initialBalance.current === null) return;
+    if (balance > initialBalance.current) {
+      setAwaitingPayment(false);
+      toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
+      navigate("/app");
+    }
+  }, [balance, awaitingPayment, navigate]);
+
+  const openCheckout = (initPoint: string) => {
+    window.open(initPoint, "_blank");
+    setAwaitingPayment(true);
+  };
 
   const testPlan = {
     name: "Teste",
@@ -127,7 +158,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        window.location.href = data.init_point;
+        openCheckout(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -147,7 +178,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        window.location.href = data.init_point;
+        openCheckout(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
