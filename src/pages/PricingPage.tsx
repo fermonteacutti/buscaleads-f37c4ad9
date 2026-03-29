@@ -1,15 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, ChevronDown, ChevronUp, Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { Check, X, ChevronDown, ChevronUp, Sparkles, Zap, ShieldCheck, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
 
 const subscriptionPlans = [
   {
     name: "Free",
+    slug: "free",
     monthlyPrice: 0,
     annualPrice: 0,
     credits: "50 créditos únicos",
@@ -29,6 +33,7 @@ const subscriptionPlans = [
   },
   {
     name: "Starter",
+    slug: "starter",
     monthlyPrice: 49,
     annualPrice: 41.65,
     credits: "200 créditos/mês",
@@ -48,6 +53,7 @@ const subscriptionPlans = [
   },
   {
     name: "Pro",
+    slug: "pro",
     monthlyPrice: 89,
     annualPrice: 75.65,
     credits: "500 créditos/mês",
@@ -67,6 +73,7 @@ const subscriptionPlans = [
   },
   {
     name: "Business",
+    slug: "business",
     monthlyPrice: 129,
     annualPrice: 109.65,
     credits: "1.000 créditos/mês",
@@ -87,9 +94,9 @@ const subscriptionPlans = [
 ];
 
 const oneOffPacks = [
-  { credits: 100, price: 29, badge: null },
-  { credits: 300, price: 59, badge: "Mais popular" },
-  { credits: 1000, price: 149, badge: "Melhor valor" },
+  { credits: 100, price: 29, badge: null, planId: "pack_100" },
+  { credits: 300, price: 59, badge: "Mais popular", planId: "pack_300" },
+  { credits: 1000, price: 149, badge: "Melhor valor", planId: "pack_1000" },
 ];
 
 const faqs = [
@@ -104,12 +111,78 @@ const faqs = [
 export default function PricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
     { value: "annual", label: "Anual", extra: "-15%" },
     { value: "oneoff", label: "Avulso" },
   ];
+
+  const handleSubscribe = async (planSlug: string, billing: "monthly" | "annual") => {
+    if (!user) {
+      navigate(`/login?cadastro=true&plano=${planSlug}`);
+      return;
+    }
+
+    const key = `${planSlug}_${billing}`;
+    setLoadingPlan(key);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: { type: "plan", plan_id: planSlug, billing },
+      });
+
+      if (error) throw error;
+      if (data?.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("URL de pagamento não recebida");
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast.error("Erro ao iniciar pagamento. Tente novamente.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleBuyCredits = async (planId: string) => {
+    if (!user) {
+      navigate("/login?cadastro=true");
+      return;
+    }
+
+    setLoadingPlan(planId);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: { type: "credits", plan_id: planId },
+      });
+
+      if (error) throw error;
+      if (data?.init_point) {
+        window.location.href = data.init_point;
+      } else {
+        throw new Error("URL de pagamento não recebida");
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast.error("Erro ao iniciar pagamento. Tente novamente.");
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleFreePlan = () => {
+    if (user) {
+      navigate("/app");
+    } else {
+      navigate("/login?cadastro=true");
+    }
+  };
 
   return (
     <>
@@ -147,6 +220,8 @@ export default function PricingPage() {
               {subscriptionPlans.map((plan, i) => {
                 const price = tab === "annual" ? plan.annualPrice : plan.monthlyPrice;
                 const priceDisplay = price === 0 ? "Grátis" : `R$ ${price % 1 === 0 ? price : price.toFixed(2).replace(".", ",")}`;
+                const billing = tab === "annual" ? "annual" : "monthly";
+                const isLoading = loadingPlan === (plan.slug === "free" ? null : `${plan.slug}_${billing}`);
 
                 return (
                   <motion.div
@@ -170,9 +245,31 @@ export default function PricingPage() {
                       {price > 0 && <span className="text-muted-foreground">/mês</span>}
                     </div>
 
-                    <Button variant={plan.popular ? "hero" : "outline"} className="w-full mb-6" asChild>
-                      <Link to={`/login?cadastro=true&plano=${plan.name.toLowerCase()}`}>{plan.cta}</Link>
-                    </Button>
+                    {plan.slug === "free" ? (
+                      <Button
+                        variant="outline"
+                        className="w-full mb-6"
+                        onClick={handleFreePlan}
+                      >
+                        {plan.cta}
+                      </Button>
+                    ) : (
+                      <Button
+                        variant={plan.popular ? "hero" : "outline"}
+                        className="w-full mb-6"
+                        disabled={!!loadingPlan}
+                        onClick={() => handleSubscribe(plan.slug, billing)}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Aguarde...
+                          </>
+                        ) : (
+                          plan.cta
+                        )}
+                      </Button>
+                    )}
 
                     <ul className="space-y-3">
                       {plan.features.map((feat) => (
@@ -239,33 +336,48 @@ export default function PricingPage() {
           {/* One-off Credits */}
           {tab === "oneoff" && (
             <div className="grid sm:grid-cols-3 gap-6 mt-12 max-w-3xl mx-auto">
-              {oneOffPacks.map((pack, i) => (
-                <motion.div
-                  key={pack.credits}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08 }}
-                  className="relative p-8 rounded-2xl border border-border bg-card shadow-soft text-center"
-                >
-                  {pack.badge && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="default">
-                      {pack.badge}
-                    </Badge>
-                  )}
-                  <Zap className="h-8 w-8 text-accent mx-auto mb-3" />
-                  <h3 className="text-2xl font-bold mb-1">{pack.credits.toLocaleString("pt-BR")}</h3>
-                  <p className="text-sm text-muted-foreground mb-4">créditos</p>
-                  <div className="mb-6">
-                    <span className="text-3xl font-extrabold">R$ {pack.price}</span>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Comprar créditos
-                  </Button>
-                  <p className="text-xs text-muted-foreground mt-3">
-                    R$ {(pack.price / pack.credits).toFixed(2).replace(".", ",")} por crédito
-                  </p>
-                </motion.div>
-              ))}
+              {oneOffPacks.map((pack, i) => {
+                const isLoading = loadingPlan === pack.planId;
+                return (
+                  <motion.div
+                    key={pack.credits}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    className="relative p-8 rounded-2xl border border-border bg-card shadow-soft text-center"
+                  >
+                    {pack.badge && (
+                      <Badge className="absolute -top-3 left-1/2 -translate-x-1/2" variant="default">
+                        {pack.badge}
+                      </Badge>
+                    )}
+                    <Zap className="h-8 w-8 text-accent mx-auto mb-3" />
+                    <h3 className="text-2xl font-bold mb-1">{pack.credits.toLocaleString("pt-BR")}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">créditos</p>
+                    <div className="mb-6">
+                      <span className="text-3xl font-extrabold">R$ {pack.price}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      disabled={!!loadingPlan}
+                      onClick={() => handleBuyCredits(pack.planId)}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Aguarde...
+                        </>
+                      ) : (
+                        "Comprar créditos"
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-3">
+                      R$ {(pack.price / pack.credits).toFixed(2).replace(".", ",")} por crédito
+                    </p>
+                  </motion.div>
+                );
+              })}
             </div>
           )}
 

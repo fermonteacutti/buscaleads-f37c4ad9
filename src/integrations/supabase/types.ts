@@ -193,6 +193,51 @@ export type Database = {
           },
         ]
       }
+      payment_intents: {
+        Row: {
+          amount: number
+          billing: string | null
+          created_at: string | null
+          credits: number
+          id: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          plan_id: string
+          processed_at: string | null
+          status: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          billing?: string | null
+          created_at?: string | null
+          credits: number
+          id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          plan_id: string
+          processed_at?: string | null
+          status?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          billing?: string | null
+          created_at?: string | null
+          credits?: number
+          id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          plan_id?: string
+          processed_at?: string | null
+          status?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       plans: {
         Row: {
           annual_price: number
@@ -401,6 +446,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_credits: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_reference_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       debit_credits: {
         Args: {
           p_amount: number
