@@ -26,7 +26,7 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
         <Building2 className="h-12 w-12 text-muted-foreground/40 mb-3" />
         <p className="text-sm font-medium text-muted-foreground">Nenhum lead encontrado</p>
         <p className="text-xs text-muted-foreground/70 mt-1">Ajuste os filtros ou inicie uma nova busca.</p>
-        <Button variant="default" size="sm" className="mt-4" onClick={() => navigate("/app/search")}>
+        <Button variant="default" size="sm" className="mt-4" onClick={() => navigate("/app/busca")}>
           <Search className="h-4 w-4 mr-1" /> Nova Busca
         </Button>
       </div>
