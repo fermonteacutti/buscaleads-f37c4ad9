@@ -9,6 +9,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import { CreditsBadge } from "@/components/credits/CreditsBadge";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
