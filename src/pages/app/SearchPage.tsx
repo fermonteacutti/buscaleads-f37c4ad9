@@ -12,6 +12,8 @@ import { ArrowLeft, ArrowRight, Rocket, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useCredits } from "@/hooks/useCredits";
+import { InsufficientCreditsModal } from "@/components/credits/InsufficientCreditsModal";
 
 const STEPS = [
   { label: "Negócio", component: StepBusinessType },
