@@ -163,6 +163,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         init_point: mpData.init_point,
         preference_id: mpData.id,
+        intent_id: intent.id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
