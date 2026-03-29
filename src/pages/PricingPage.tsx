@@ -151,7 +151,7 @@ export default function PricingPage() {
 
   const handleBuyCredits = async (planId: string) => {
     if (!user) {
-      navigate("/login?cadastro=true");
+      navigate("/login?redirect=/planos");
       return;
     }
 
