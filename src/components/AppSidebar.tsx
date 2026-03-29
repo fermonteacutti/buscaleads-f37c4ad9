@@ -131,11 +131,6 @@ export function AppSidebar() {
             </Tooltip>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <div className={`px-2 ${collapsed ? "flex justify-center" : ""}`}>
-              <CreditsBadge />
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
             <Tooltip>
               <TooltipTrigger asChild>
                 <SidebarMenuButton asChild className="text-muted-foreground hover:text-foreground">
