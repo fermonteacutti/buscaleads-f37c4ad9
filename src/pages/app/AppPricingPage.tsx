@@ -124,8 +124,8 @@ export default function AppPricingPage() {
         body: { type: "plan", plan_id: planSlug, billing },
       });
       if (error) throw error;
-      if (data?.sandbox_init_point) {
-        window.location.href = data.sandbox_init_point;
+      if (data?.init_point) {
+        window.location.href = data.init_point;
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -144,8 +144,8 @@ export default function AppPricingPage() {
         body: { type: "credits", plan_id: planId },
       });
       if (error) throw error;
-      if (data?.sandbox_init_point) {
-        window.location.href = data.sandbox_init_point;
+      if (data?.init_point) {
+        window.location.href = data.init_point;
       } else {
         throw new Error("URL de pagamento não recebida");
       }
