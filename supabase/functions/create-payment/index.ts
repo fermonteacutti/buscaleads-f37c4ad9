@@ -88,6 +88,39 @@ Deno.serve(async (req) => {
       });
     }
 
+    const supabaseService = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Check for existing pending intent for same user/plan/billing (prevent duplicates)
+    const { data: existingIntent } = await supabaseService
+      .from("payment_intents")
+      .select("id, mp_preference_id, status, created_at")
+      .eq("user_id", userId)
+      .eq("plan_id", plan_id)
+      .eq("type", type)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    // If there's a recent pending intent (< 30 min old), reuse it
+    if (existingIntent) {
+      const ageMs = Date.now() - new Date(existingIntent.created_at).getTime();
+      const thirtyMinutes = 30 * 60 * 1000;
+      if (ageMs < thirtyMinutes && existingIntent.mp_preference_id) {
+        // Reconstruct init_point from preference ID
+        const initPoint = `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${existingIntent.mp_preference_id}`;
+        console.log("Reusing existing pending intent:", existingIntent.id);
+        return new Response(
+          JSON.stringify({
+            init_point: initPoint,
+            preference_id: existingIntent.mp_preference_id,
+            intent_id: existingIntent.id,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Create payment_intent record
     const { data: intent, error: intentError } = await supabase
       .from("payment_intents")

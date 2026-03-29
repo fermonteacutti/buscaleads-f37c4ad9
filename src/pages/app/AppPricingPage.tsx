@@ -96,6 +96,7 @@ export default function AppPricingPage() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [pendingIntentId, setPendingIntentId] = useState<string | null>(null);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const { isAdmin } = useIsAdmin();
   const { balance, fetchBalance } = useCredits();
   const navigate = useNavigate();
@@ -106,11 +107,19 @@ export default function AppPricingPage() {
   const handlePaymentSuccess = () => {
     if (paymentHandledRef.current) return;
     paymentHandledRef.current = true;
-    setAwaitingPayment(false);
-    setPendingIntentId(null);
-    if (pollingRef.current) clearInterval(pollingRef.current);
-    toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
-    navigate("/app");
+    setPaymentConfirmed(true);
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+    toast.success("✅ Pagamento confirmado! Créditos adicionados.");
+    // Auto-redirect after 4 seconds
+    setTimeout(() => {
+      setAwaitingPayment(false);
+      setPendingIntentId(null);
+      setPaymentConfirmed(false);
+      navigate("/app");
+    }, 4000);
   };
 
   // Capture balance before checkout opens
@@ -253,19 +262,44 @@ export default function AppPricingPage() {
       {awaitingPayment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 p-8 rounded-2xl border border-border bg-card shadow-lg text-center max-w-sm">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Aguardando confirmação do pagamento...</h2>
-            <p className="text-sm text-muted-foreground">Complete o pagamento na aba do Mercado Pago. Esta página será atualizada automaticamente.</p>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setAwaitingPayment(false);
-                setPendingIntentId(null);
-              }}
-            >
-              Cancelar
-            </Button>
+            {paymentConfirmed ? (
+              <>
+                <Check className="h-10 w-10 text-emerald-500" />
+                <h2 className="text-lg font-semibold text-foreground">Pagamento confirmado! 🎉</h2>
+                <p className="text-sm text-muted-foreground">
+                  Seus créditos já foram adicionados. Você pode fechar a aba do Mercado Pago.
+                </p>
+                <p className="text-xs text-muted-foreground">Redirecionando para o Dashboard...</p>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setAwaitingPayment(false);
+                    setPendingIntentId(null);
+                    setPaymentConfirmed(false);
+                    navigate("/app");
+                  }}
+                >
+                  Ir para o Dashboard
+                </Button>
+              </>
+            ) : (
+              <>
+                <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">Aguardando confirmação do pagamento...</h2>
+                <p className="text-sm text-muted-foreground">Complete o pagamento na aba do Mercado Pago. Esta página será atualizada automaticamente.</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setAwaitingPayment(false);
+                    setPendingIntentId(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}
