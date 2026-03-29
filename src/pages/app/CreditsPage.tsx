@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCredits } from "@/hooks/useCredits";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,7 +29,7 @@ const CREDIT_PACKS = [
 export default function CreditsPage() {
   const [credits, setCredits] = useState<Credit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(0);
+  const { balance } = useCredits();
 
   useEffect(() => {
     async function load() {
@@ -43,7 +44,6 @@ export default function CreditsPage() {
 
       if (data && data.length > 0) {
         setCredits(data);
-        setBalance(data[0].balance_after);
       }
       setLoading(false);
     }
