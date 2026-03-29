@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, ChevronDown, ChevronUp, Sparkles, Zap, ShieldCheck, Loader2 } from "lucide-react";
+import { Check, X, Sparkles, Zap, ShieldCheck, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
 
@@ -21,12 +20,13 @@ const subscriptionPlans = [
     features: [
       { label: "200 créditos/mês", included: true },
       { label: "1 busca simultânea", included: true },
-      { label: "Exportação CSV/Excel", included: true },
+      { label: "Exportação CSV", included: true },
       { label: "Google Maps", included: true },
       { label: "Até 500 leads salvos", included: true },
       { label: "Suporte e-mail (72h)", included: true },
       { label: "Todas as fontes", included: false },
       { label: "Funil completo", included: false },
+      { label: "API Access", included: false },
     ],
   },
   {
@@ -41,11 +41,12 @@ const subscriptionPlans = [
       { label: "500 créditos/mês", included: true },
       { label: "3 buscas simultâneas", included: true },
       { label: "Exportação CSV/Excel", included: true },
-      { label: "Todas as fontes", included: true },
-      { label: "Até 2.000 leads salvos", included: true },
-      { label: "Suporte prioritário (24h)", included: true },
+      { label: "Todas as fontes de dados", included: true },
+      { label: "Leads salvos ilimitados", included: true },
       { label: "Funil completo", included: true },
-      { label: "Enriquecimento de dados", included: false },
+      { label: "Suporte prioritário (24h)", included: true },
+      { label: "Integração CRM (em breve)", included: true },
+      { label: "API Access", included: false },
     ],
   },
   {
@@ -58,15 +59,27 @@ const subscriptionPlans = [
     cta: "Assinar Business",
     features: [
       { label: "1.000 créditos/mês", included: true },
-      { label: "5 buscas simultâneas", included: true },
+      { label: "10 buscas simultâneas", included: true },
       { label: "Exportação CSV/Excel", included: true },
-      { label: "Todas as fontes", included: true },
-      { label: "Leads ilimitados salvos", included: true },
-      { label: "Suporte VIP (12h)", included: true },
+      { label: "Todas as fontes de dados", included: true },
+      { label: "Leads salvos ilimitados", included: true },
       { label: "Funil completo", included: true },
-      { label: "Enriquecimento de dados", included: true },
+      { label: "Suporte prioritário (4h)", included: true },
+      { label: "API Access", included: true },
+      { label: "Integração CRM (em breve)", included: true },
     ],
   },
+];
+
+const enterpriseFeatures = [
+  "Créditos customizados",
+  "Usuários ilimitados",
+  "SLA dedicado",
+  "CRM incluso",
+  "Gerente de conta",
+  "Onboarding personalizado",
+  "API Access",
+  "Todas as fontes de dados",
 ];
 
 const creditPacks = [
@@ -78,7 +91,6 @@ const creditPacks = [
 export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
@@ -152,7 +164,7 @@ export default function AppPricingPage() {
 
       {/* Subscription Plans */}
       {tab !== "oneoff" && (
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {subscriptionPlans.map((plan, i) => {
             const price = tab === "annual" ? plan.annualPrice : plan.monthlyPrice;
             const priceDisplay = `R$ ${price % 1 === 0 ? price : price.toFixed(2).replace(".", ",")}`;
@@ -211,6 +223,39 @@ export default function AppPricingPage() {
               </motion.div>
             );
           })}
+
+          {/* Enterprise Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: subscriptionPlans.length * 0.08 }}
+            className="relative p-6 rounded-2xl border border-border bg-card shadow-soft"
+          >
+            <h3 className="text-xl font-bold mb-1">Enterprise</h3>
+            <p className="text-xs text-muted-foreground mb-4">Créditos customizados</p>
+            <div className="mb-6">
+              <span className="text-2xl font-extrabold">Sob consulta</span>
+            </div>
+
+            <Button variant="outline" className="w-full mb-6" asChild>
+              <a
+                href="https://wa.me/5519974060016?text=Olá!%20Tenho%20interesse%20no%20plano%20Enterprise%20do%20BuscaLead."
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Falar com especialista
+              </a>
+            </Button>
+
+            <ul className="space-y-2">
+              {enterpriseFeatures.map((feat) => (
+                <li key={feat} className="flex items-center gap-2 text-sm">
+                  <Check className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span className="text-foreground">{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
         </div>
       )}
 
@@ -259,6 +304,21 @@ export default function AppPricingPage() {
           })}
         </div>
       )}
+
+      {/* Garantia */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true }}
+        className="max-w-2xl mx-auto text-center p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5"
+      >
+        <p className="font-semibold text-emerald-600 flex items-center justify-center gap-2">
+          <ShieldCheck className="h-5 w-5" /> Garantia de 7 dias
+        </p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Se não ficar satisfeito nos primeiros 7 dias, devolvemos 100% do seu dinheiro. Sem perguntas.
+        </p>
+      </motion.div>
     </div>
   );
 }
