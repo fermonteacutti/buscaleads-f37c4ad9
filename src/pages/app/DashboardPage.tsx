@@ -326,34 +326,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="shadow-soft h-full bg-hero text-primary-foreground">
-            <CardContent className="pt-6 flex flex-col justify-between h-full">
-              <div>
-                <p className="text-sm font-medium opacity-80">Plano Atual</p>
-                <p className="text-2xl font-bold mt-1">Professional</p>
-                <p className="text-sm opacity-70 mt-2">
-                  1.000 créditos/mês • Renova em 15 dias
-                </p>
-              </div>
-              <div className="mt-6 flex flex-col gap-2">
-                <Button
-                  variant="secondary"
-                  className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0"
-                  asChild
-                >
-                  <Link to="/app/creditos">
-                    <CreditCard className="h-4 w-4 mr-2" /> Gerenciar Plano
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <PlanCard />
       </div>
 
       {/* Recent Searches */}
