@@ -29,7 +29,7 @@ const CREDIT_PACKS = [
 export default function CreditsPage() {
   const [credits, setCredits] = useState<Credit[]>([]);
   const [loading, setLoading] = useState(true);
-  const [balance, setBalance] = useState(0);
+  const { balance } = useCredits();
 
   useEffect(() => {
     async function load() {
