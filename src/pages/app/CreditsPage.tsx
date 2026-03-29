@@ -44,7 +44,6 @@ export default function CreditsPage() {
 
       if (data && data.length > 0) {
         setCredits(data);
-        setBalance(data[0].balance_after);
       }
       setLoading(false);
     }
