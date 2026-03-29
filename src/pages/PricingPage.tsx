@@ -136,8 +136,8 @@ export default function PricingPage() {
       });
 
       if (error) throw error;
-      if (data?.init_point) {
-        window.location.href = data.init_point;
+      if (data?.sandbox_init_point) {
+        window.location.href = data.sandbox_init_point;
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -163,8 +163,8 @@ export default function PricingPage() {
       });
 
       if (error) throw error;
-      if (data?.init_point) {
-        window.location.href = data.init_point;
+      if (data?.sandbox_init_point) {
+        window.location.href = data.sandbox_init_point;
       } else {
         throw new Error("URL de pagamento não recebida");
       }
