@@ -19,6 +19,7 @@ import DashboardPage from "./pages/app/DashboardPage";
 import SearchPage from "./pages/app/SearchPage";
 import LeadsPage from "./pages/app/LeadsPage";
 import CreditsPage from "./pages/app/CreditsPage";
+import AppPricingPage from "./pages/app/AppPricingPage";
 import SettingsPage from "./pages/app/SettingsPage";
 import PaymentSuccessPage from "./pages/app/PaymentSuccessPage";
 import PaymentErrorPage from "./pages/app/PaymentErrorPage";
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="busca" element={<SearchPage />} />
                 <Route path="leads" element={<LeadsPage />} />
                 <Route path="creditos" element={<CreditsPage />} />
+                <Route path="planos" element={<AppPricingPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="pagamento/sucesso" element={<PaymentSuccessPage />} />
                 <Route path="pagamento/erro" element={<PaymentErrorPage />} />
