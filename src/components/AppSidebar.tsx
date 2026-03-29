@@ -10,7 +10,7 @@ import {
   Star,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { CreditsBadge } from "@/components/credits/CreditsBadge";
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -129,11 +129,6 @@ export function AppSidebar() {
                 <TooltipContent side="right">{userName}</TooltipContent>
               )}
             </Tooltip>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <div className={`px-2 ${collapsed ? "flex justify-center" : ""}`}>
-              <CreditsBadge />
-            </div>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <Tooltip>
