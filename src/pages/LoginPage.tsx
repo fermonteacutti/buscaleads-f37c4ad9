@@ -53,7 +53,11 @@ export default function LoginPage() {
         navigate("/app");
       }
     } catch (err: any) {
-      toast.error(err.message || "Erro ao autenticar");
+      if (err.message?.toLowerCase().includes("email not confirmed")) {
+        toast.error("✉️ E-mail não confirmado. Acesse sua caixa de entrada e clique no link que enviamos para ativar sua conta.");
+      } else {
+        toast.error(err.message || "Erro ao autenticar");
+      }
     } finally {
       setLoading(false);
     }
