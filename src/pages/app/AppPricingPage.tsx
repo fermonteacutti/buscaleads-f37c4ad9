@@ -129,47 +129,60 @@ export default function AppPricingPage() {
     let isCancelled = false;
 
     const poll = async () => {
-      console.log("[Payment] Polling balance...");
-      await fetchBalance();
+      console.log("[Payment] Polling...");
+      try {
+        // 1. Check balance directly from DB
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-      if (!pendingIntentId) return;
+        const { data: balanceData } = await supabase
+          .from("credit_balances")
+          .select("balance")
+          .eq("user_id", user.id)
+          .single();
 
-      const { data, error } = await supabase
-        .from("payment_intents")
-        .select("status")
-        .eq("id", pendingIntentId)
-        .single();
+        const currentBalance = balanceData?.balance ?? 0;
+        console.log("[Payment] DB balance:", currentBalance, "vs initial:", initialBalance.current);
 
-      if (error) {
-        console.warn("[Payment] Intent polling error:", error.message);
-        return;
-      }
+        if (!isCancelled && initialBalance.current !== null && currentBalance > initialBalance.current) {
+          console.log("[Payment] Balance increased! Redirecting...");
+          handlePaymentSuccess();
+          return;
+        }
 
-      console.log("[Payment] Intent status:", data?.status);
+        // 2. Also check intent status if we have an ID
+        if (pendingIntentId) {
+          const { data: intentData } = await supabase
+            .from("payment_intents")
+            .select("status")
+            .eq("id", pendingIntentId)
+            .single();
 
-      if (!isCancelled && data?.status === "approved") {
-        handlePaymentSuccess();
+          console.log("[Payment] Intent status:", intentData?.status);
+
+          if (!isCancelled && intentData?.status === "approved") {
+            console.log("[Payment] Intent approved! Redirecting...");
+            handlePaymentSuccess();
+            return;
+          }
+        }
+
+        // Also update the hook balance for UI
+        await fetchBalance();
+      } catch (err) {
+        console.warn("[Payment] Poll error:", err);
       }
     };
 
     // First poll immediately
     poll();
-    pollingRef.current = setInterval(poll, 5000);
+    pollingRef.current = setInterval(poll, 4000);
 
     return () => {
       isCancelled = true;
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [awaitingPayment, fetchBalance, pendingIntentId]);
-
-  // Detect balance increase → success
-  useEffect(() => {
-    if (!awaitingPayment || initialBalance.current === null) return;
-    console.log("[Payment] Balance check:", balance, "vs initial:", initialBalance.current);
-    if (balance > initialBalance.current) {
-      handlePaymentSuccess();
-    }
-  }, [balance, awaitingPayment]);
 
   const testPlan = {
     name: "Teste",
