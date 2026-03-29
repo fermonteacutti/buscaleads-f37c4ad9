@@ -50,6 +50,9 @@ const App = () => (
                 <Route path="leads" element={<LeadsPage />} />
                 <Route path="creditos" element={<CreditsPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
+                <Route path="pagamento/sucesso" element={<PaymentSuccessPage />} />
+                <Route path="pagamento/erro" element={<PaymentErrorPage />} />
+                <Route path="pagamento/pendente" element={<PaymentPendingPage />} />
               </Route>
             </Route>
             <Route path="/login" element={<LoginPage />} />
