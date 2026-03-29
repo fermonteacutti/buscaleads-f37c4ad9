@@ -7,6 +7,7 @@ import {
   Radar,
   LogOut,
   ExternalLink,
+  Star,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { CreditsBadge } from "@/components/credits/CreditsBadge";
