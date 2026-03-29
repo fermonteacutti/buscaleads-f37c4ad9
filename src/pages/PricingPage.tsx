@@ -123,7 +123,7 @@ export default function PricingPage() {
 
   const handleSubscribe = async (planSlug: string, billing: "monthly" | "annual") => {
     if (!user) {
-      navigate(`/login?cadastro=true&plano=${planSlug}`);
+      navigate("/login?redirect=/planos");
       return;
     }
 
@@ -151,7 +151,7 @@ export default function PricingPage() {
 
   const handleBuyCredits = async (planId: string) => {
     if (!user) {
-      navigate("/login?cadastro=true");
+      navigate("/login?redirect=/planos");
       return;
     }
 
