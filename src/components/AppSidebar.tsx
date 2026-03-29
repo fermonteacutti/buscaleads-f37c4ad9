@@ -38,7 +38,7 @@ const mainItems = [
   { title: "Nova Busca", url: "/app/busca", icon: Search },
   { title: "Meus Leads", url: "/app/leads", icon: Users },
   { title: "Créditos", url: "/app/creditos", icon: CreditCard },
-  { title: "Planos", url: "/planos", icon: Star },
+  { title: "Planos", url: "/app/planos", icon: Star },
   { title: "Configurações", url: "/app/configuracoes", icon: Settings },
 ];
 

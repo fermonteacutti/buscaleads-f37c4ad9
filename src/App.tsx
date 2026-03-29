@@ -50,6 +50,7 @@ const App = () => (
                 <Route path="busca" element={<SearchPage />} />
                 <Route path="leads" element={<LeadsPage />} />
                 <Route path="creditos" element={<CreditsPage />} />
+                <Route path="planos" element={<AppPricingPage />} />
                 <Route path="configuracoes" element={<SettingsPage />} />
                 <Route path="pagamento/sucesso" element={<PaymentSuccessPage />} />
                 <Route path="pagamento/erro" element={<PaymentErrorPage />} />
