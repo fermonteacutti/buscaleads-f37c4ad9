@@ -1,9 +1,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2, RefreshCw } from "lucide-react";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,20 +21,31 @@ export default function LoginPage() {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [signUpConfirmation, setSignUpConfirmation] = useState(false);
+  const [signUpEmail, setSignUpEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSignUp && !termsAccepted) {
+      toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+      return;
+    }
     setLoading(true);
     try {
       if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: fullName } },
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/login`,
+          },
         });
         if (error) throw error;
-        toast.success("Conta criada com sucesso!");
-        navigate("/app");
+        setSignUpEmail(email);
+        setSignUpConfirmation(true);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -47,8 +59,29 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    setResendLoading(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: signUpEmail,
+        options: { emailRedirectTo: `${window.location.origin}/login` },
+      });
+      if (error) throw error;
+      toast.success("E-mail de confirmação reenviado!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao reenviar e-mail");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!termsAccepted) {
+      toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+      return;
+    }
     setMagicLinkLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -65,16 +98,62 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (!termsAccepted) {
+      toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'https://buscalead.ia.br/app',
-      },
+      provider: "google",
+      options: { redirectTo: "https://buscalead.ia.br/app" },
     });
     if (error) {
       toast.error(error.message || "Erro ao entrar com Google");
     }
   };
+
+  // Tela de confirmação de cadastro
+  if (signUpConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 py-12 px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md text-center"
+        >
+          <div className="p-8 rounded-2xl border border-border bg-card shadow-medium">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mx-auto mb-4">
+              <Mail className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">✉️ Verifique seu e-mail!</h1>
+            <p className="text-muted-foreground mb-6">
+              Enviamos um link de confirmação para{" "}
+              <span className="font-medium text-foreground">{signUpEmail}</span>.
+              <br /><br />
+              Clique no link para ativar sua conta e fazer login.
+            </p>
+            <Button
+              variant="outline"
+              className="w-full mb-3"
+              onClick={handleResendConfirmation}
+              disabled={resendLoading}
+            >
+              {resendLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Reenviar e-mail
+            </Button>
+            <button
+              onClick={() => {
+                setSignUpConfirmation(false);
+                setIsSignUp(false);
+              }}
+              className="w-full text-center text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              ← Voltar ao login
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Tela de confirmação após envio do magic link
   if (magicLinkSent) {
@@ -153,6 +232,20 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+
+              <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Concordo com os{" "}
+                  <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
+                  {" "}e a{" "}
+                  <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+                </span>
+              </label>
 
               <Button variant="hero" className="w-full" type="submit" disabled={magicLinkLoading}>
                 {magicLinkLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Wand2 className="h-4 w-4 mr-1" />}
@@ -234,8 +327,12 @@ export default function LoginPage() {
             </div>
 
             {isSignUp && (
-              <label className="flex items-start gap-2 text-xs text-muted-foreground">
-                <input type="checkbox" className="mt-0.5 rounded border-border" />
+              <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                <Checkbox
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                  className="mt-0.5"
+                />
                 <span>
                   Concordo com os{" "}
                   <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
@@ -259,6 +356,23 @@ export default function LoginPage() {
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center"><span className="bg-card px-3 text-xs text-muted-foreground">ou continue com</span></div>
           </div>
+
+          {/* Terms checkbox for non-signup flows */}
+          {!isSignUp && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer mb-3">
+              <Checkbox
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-0.5"
+              />
+              <span>
+                Concordo com os{" "}
+                <Link to="/termos-de-uso" className="text-primary hover:underline">Termos de Uso</Link>
+                {" "}e a{" "}
+                <Link to="/politica-de-privacidade" className="text-primary hover:underline">Política de Privacidade</Link>
+              </span>
+            </label>
+          )}
 
           <div className="flex flex-col gap-3">
             <Button variant="outline" className="w-full" onClick={() => setShowMagicLink(true)}>
