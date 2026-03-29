@@ -1,13 +1,18 @@
-import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { useCredits } from "@/hooks/useCredits";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
 
@@ -94,104 +99,11 @@ const creditPacks = [
 export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [awaitingPayment, setAwaitingPayment] = useState(false);
-  const [pendingIntentId, setPendingIntentId] = useState<string | null>(null);
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [checkoutDialog, setCheckoutDialog] = useState<{ open: boolean; url: string | null }>({
+    open: false,
+    url: null,
+  });
   const { isAdmin } = useIsAdmin();
-  const { balance, fetchBalance } = useCredits();
-  const navigate = useNavigate();
-  const initialBalance = useRef<number | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const paymentHandledRef = useRef(false);
-
-  const handlePaymentSuccess = () => {
-    if (paymentHandledRef.current) return;
-    paymentHandledRef.current = true;
-    setPaymentConfirmed(true);
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-    toast.success("✅ Pagamento confirmado! Créditos adicionados.");
-    // Auto-redirect after 4 seconds
-    setTimeout(() => {
-      setAwaitingPayment(false);
-      setPendingIntentId(null);
-      setPaymentConfirmed(false);
-      navigate("/app");
-    }, 4000);
-  };
-
-  // Capture balance before checkout opens
-  const openCheckout = (initPoint: string, intentId?: string) => {
-    paymentHandledRef.current = false;
-    initialBalance.current = balance;
-    setPendingIntentId(intentId ?? null);
-    console.log("[Payment] Captured initial balance:", balance);
-    window.open(initPoint, "_blank");
-    setAwaitingPayment(true);
-  };
-
-  // Polling: when awaitingPayment, check balance every 5s
-  useEffect(() => {
-    if (!awaitingPayment) return;
-    let isCancelled = false;
-
-    const poll = async () => {
-      console.log("[Payment] Polling...");
-      try {
-        // 1. Check balance directly from DB
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data: balanceData } = await supabase
-          .from("credit_balances")
-          .select("balance")
-          .eq("user_id", user.id)
-          .single();
-
-        const currentBalance = balanceData?.balance ?? 0;
-        console.log("[Payment] DB balance:", currentBalance, "vs initial:", initialBalance.current);
-
-        if (!isCancelled && initialBalance.current !== null && currentBalance > initialBalance.current) {
-          console.log("[Payment] Balance increased! Redirecting...");
-          handlePaymentSuccess();
-          return;
-        }
-
-        // 2. Also check intent status if we have an ID
-        if (pendingIntentId) {
-          const { data: intentData } = await supabase
-            .from("payment_intents")
-            .select("status")
-            .eq("id", pendingIntentId)
-            .single();
-
-          console.log("[Payment] Intent status:", intentData?.status);
-
-          if (!isCancelled && intentData?.status === "approved") {
-            console.log("[Payment] Intent approved! Redirecting...");
-            handlePaymentSuccess();
-            return;
-          }
-        }
-
-        // Also update the hook balance for UI
-        await fetchBalance();
-      } catch (err) {
-        console.warn("[Payment] Poll error:", err);
-      }
-    };
-
-    // First poll immediately
-    poll();
-    pollingRef.current = setInterval(poll, 4000);
-
-    return () => {
-      isCancelled = true;
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [awaitingPayment, fetchBalance, pendingIntentId]);
 
   const testPlan = {
     name: "Teste",
@@ -215,6 +127,16 @@ export default function AppPricingPage() {
     { value: "oneoff", label: "Avulso" },
   ];
 
+  const handleCheckoutReady = (initPoint: string) => {
+    setCheckoutDialog({ open: true, url: initPoint });
+  };
+
+  const handleGoToCheckout = () => {
+    if (checkoutDialog.url) {
+      window.location.href = checkoutDialog.url;
+    }
+  };
+
   const handleSubscribe = async (planSlug: string, billing: "monthly" | "annual") => {
     const key = `${planSlug}_${billing}`;
     setLoadingPlan(key);
@@ -224,7 +146,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        openCheckout(data.init_point, data.intent_id);
+        handleCheckoutReady(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -244,7 +166,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        openCheckout(data.init_point, data.intent_id);
+        handleCheckoutReady(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -258,51 +180,42 @@ export default function AppPricingPage() {
 
   return (
     <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8 relative">
-      {/* Awaiting payment overlay */}
-      {awaitingPayment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4 p-8 rounded-2xl border border-border bg-card shadow-lg text-center max-w-sm">
-            {paymentConfirmed ? (
-              <>
-                <Check className="h-10 w-10 text-emerald-500" />
-                <h2 className="text-lg font-semibold text-foreground">Pagamento confirmado! 🎉</h2>
-                <p className="text-sm text-muted-foreground">
-                  Seus créditos já foram adicionados. Você pode fechar a aba do Mercado Pago.
-                </p>
-                <p className="text-xs text-muted-foreground">Redirecionando para o Dashboard...</p>
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => {
-                    setAwaitingPayment(false);
-                    setPendingIntentId(null);
-                    setPaymentConfirmed(false);
-                    navigate("/app");
-                  }}
-                >
-                  Ir para o Dashboard
-                </Button>
-              </>
-            ) : (
-              <>
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <h2 className="text-lg font-semibold text-foreground">Aguardando confirmação do pagamento...</h2>
-                <p className="text-sm text-muted-foreground">Complete o pagamento na aba do Mercado Pago. Esta página será atualizada automaticamente.</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setAwaitingPayment(false);
-                    setPendingIntentId(null);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Checkout instruction dialog */}
+      <Dialog open={checkoutDialog.open} onOpenChange={(open) => !open && setCheckoutDialog({ open: false, url: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg">Antes de continuar...</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground pt-2 space-y-3">
+              <p>
+                Você será direcionado ao <strong>checkout do Mercado Pago</strong> para finalizar o pagamento.
+              </p>
+              <p>
+                Após concluir o pagamento, clique no botão{" "}
+                <span className="inline-flex items-center gap-1 bg-muted px-2 py-0.5 rounded text-xs font-medium text-foreground">
+                  ← Voltar à loja
+                </span>{" "}
+                no topo da página do Mercado Pago para retornar e confirmar seus créditos.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row">
+            <Button
+              variant="ghost"
+              onClick={() => setCheckoutDialog({ open: false, url: null })}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleGoToCheckout}
+              className="w-full sm:w-auto gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Ir para o pagamento
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground">Planos e Créditos</h1>
