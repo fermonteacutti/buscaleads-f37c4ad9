@@ -166,6 +166,13 @@ function WizardContent() {
           </Button>
         )}
       </div>
+
+      <InsufficientCreditsModal
+        open={showCreditModal}
+        onClose={() => setShowCreditModal(false)}
+        currentBalance={balance}
+        requiredCredits={20}
+      />
     </div>
   );
 }
