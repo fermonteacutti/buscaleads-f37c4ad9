@@ -20,6 +20,9 @@ import SearchPage from "./pages/app/SearchPage";
 import LeadsPage from "./pages/app/LeadsPage";
 import CreditsPage from "./pages/app/CreditsPage";
 import SettingsPage from "./pages/app/SettingsPage";
+import PaymentSuccessPage from "./pages/app/PaymentSuccessPage";
+import PaymentErrorPage from "./pages/app/PaymentErrorPage";
+import PaymentPendingPage from "./pages/app/PaymentPendingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
