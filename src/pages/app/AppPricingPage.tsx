@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles, Zap, ShieldCheck, Loader2 } from "lucide-react";
+import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
 
@@ -91,6 +92,23 @@ const creditPacks = [
 export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { isAdmin } = useIsAdmin();
+
+  const testPlan = {
+    name: "Teste",
+    slug: "teste",
+    monthlyPrice: 1,
+    annualPrice: 1,
+    credits: "1 crédito (teste)",
+    popular: false,
+    cta: "Comprar Teste R$1",
+    features: [
+      { label: "1 crédito para teste", included: true },
+      { label: "Validação de checkout", included: true },
+    ],
+  };
+
+  const allPlans = isAdmin ? [...subscriptionPlans, testPlan] : subscriptionPlans;
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
@@ -165,7 +183,7 @@ export default function AppPricingPage() {
       {/* Subscription Plans */}
       {tab !== "oneoff" && (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {subscriptionPlans.map((plan, i) => {
+          {allPlans.map((plan, i) => {
             const price = tab === "annual" ? plan.annualPrice : plan.monthlyPrice;
             const priceDisplay = `R$ ${price % 1 === 0 ? price : price.toFixed(2).replace(".", ",")}`;
             const billing = tab === "annual" ? "annual" : "monthly";
@@ -228,7 +246,7 @@ export default function AppPricingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: subscriptionPlans.length * 0.08 }}
+            transition={{ delay: allPlans.length * 0.08 }}
             className="relative p-6 rounded-2xl border border-border bg-card shadow-soft"
           >
             <h3 className="text-xl font-bold mb-1">Enterprise</h3>

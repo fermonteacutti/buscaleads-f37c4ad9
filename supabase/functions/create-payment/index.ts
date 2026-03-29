@@ -10,6 +10,7 @@ const planConfig: Record<string, { monthly: number; annual: number; credits: num
   starter: { monthly: 4900, annual: 41650, credits: 200, name: "Plano Starter" },
   pro: { monthly: 8900, annual: 75650, credits: 500, name: "Plano Pro" },
   business: { monthly: 12900, annual: 109650, credits: 1000, name: "Plano Business" },
+  teste: { monthly: 100, annual: 100, credits: 1, name: "Plano Teste (R$1)" },
 };
 
 const creditPackConfig: Record<string, { price: number; credits: number; name: string }> = {
