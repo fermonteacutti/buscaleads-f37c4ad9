@@ -158,10 +158,10 @@ Deno.serve(async (req) => {
       .update({ mp_preference_id: mpData.id })
       .eq("id", intent.id);
 
+    // Always use production init_point (not sandbox_init_point)
     return new Response(
       JSON.stringify({
         init_point: mpData.init_point,
-        sandbox_init_point: mpData.sandbox_init_point,
         preference_id: mpData.id,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
