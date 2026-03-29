@@ -27,6 +27,8 @@ function WizardContent() {
   const { step, setStep, data } = useWizard();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const [showCreditModal, setShowCreditModal] = useState(false);
+  const { balance, validateBeforeSearch, syncBalanceAfterSearch } = useCredits();
   const StepComponent = STEPS[step].component;
   const progress = ((step + 1) / STEPS.length) * 100;
 
