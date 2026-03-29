@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -95,15 +95,29 @@ export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [awaitingPayment, setAwaitingPayment] = useState(false);
+  const [pendingIntentId, setPendingIntentId] = useState<string | null>(null);
   const { isAdmin } = useIsAdmin();
   const { balance, fetchBalance } = useCredits();
   const navigate = useNavigate();
   const initialBalance = useRef<number | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const paymentHandledRef = useRef(false);
+
+  const handlePaymentSuccess = () => {
+    if (paymentHandledRef.current) return;
+    paymentHandledRef.current = true;
+    setAwaitingPayment(false);
+    setPendingIntentId(null);
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
+    navigate("/app");
+  };
 
   // Capture balance before checkout opens
-  const openCheckout = (initPoint: string) => {
+  const openCheckout = (initPoint: string, intentId?: string) => {
+    paymentHandledRef.current = false;
     initialBalance.current = balance;
+    setPendingIntentId(intentId ?? null);
     console.log("[Payment] Captured initial balance:", balance);
     window.open(initPoint, "_blank");
     setAwaitingPayment(true);
@@ -112,10 +126,30 @@ export default function AppPricingPage() {
   // Polling: when awaitingPayment, check balance every 5s
   useEffect(() => {
     if (!awaitingPayment) return;
+    let isCancelled = false;
 
     const poll = async () => {
       console.log("[Payment] Polling balance...");
       await fetchBalance();
+
+      if (!pendingIntentId) return;
+
+      const { data, error } = await supabase
+        .from("payment_intents")
+        .select("status")
+        .eq("id", pendingIntentId)
+        .single();
+
+      if (error) {
+        console.warn("[Payment] Intent polling error:", error.message);
+        return;
+      }
+
+      console.log("[Payment] Intent status:", data?.status);
+
+      if (!isCancelled && data?.status === "approved") {
+        handlePaymentSuccess();
+      }
     };
 
     // First poll immediately
@@ -123,21 +157,19 @@ export default function AppPricingPage() {
     pollingRef.current = setInterval(poll, 5000);
 
     return () => {
+      isCancelled = true;
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [awaitingPayment, fetchBalance]);
+  }, [awaitingPayment, fetchBalance, pendingIntentId]);
 
   // Detect balance increase → success
   useEffect(() => {
     if (!awaitingPayment || initialBalance.current === null) return;
     console.log("[Payment] Balance check:", balance, "vs initial:", initialBalance.current);
     if (balance > initialBalance.current) {
-      setAwaitingPayment(false);
-      if (pollingRef.current) clearInterval(pollingRef.current);
-      toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
-      navigate("/app");
+      handlePaymentSuccess();
     }
-  }, [balance, awaitingPayment, navigate]);
+  }, [balance, awaitingPayment]);
 
   const testPlan = {
     name: "Teste",
@@ -170,7 +202,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        openCheckout(data.init_point);
+        openCheckout(data.init_point, data.intent_id);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -190,7 +222,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        openCheckout(data.init_point);
+        openCheckout(data.init_point, data.intent_id);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -211,7 +243,14 @@ export default function AppPricingPage() {
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <h2 className="text-lg font-semibold text-foreground">Aguardando confirmação do pagamento...</h2>
             <p className="text-sm text-muted-foreground">Complete o pagamento na aba do Mercado Pago. Esta página será atualizada automaticamente.</p>
-            <Button variant="ghost" size="sm" onClick={() => setAwaitingPayment(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAwaitingPayment(false);
+                setPendingIntentId(null);
+              }}
+            >
               Cancelar
             </Button>
           </div>
