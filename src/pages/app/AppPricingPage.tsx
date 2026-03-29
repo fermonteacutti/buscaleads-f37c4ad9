@@ -183,7 +183,7 @@ export default function AppPricingPage() {
       {/* Subscription Plans */}
       {tab !== "oneoff" && (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {subscriptionPlans.map((plan, i) => {
+          {allPlans.map((plan, i) => {
             const price = tab === "annual" ? plan.annualPrice : plan.monthlyPrice;
             const priceDisplay = `R$ ${price % 1 === 0 ? price : price.toFixed(2).replace(".", ",")}`;
             const billing = tab === "annual" ? "annual" : "monthly";
