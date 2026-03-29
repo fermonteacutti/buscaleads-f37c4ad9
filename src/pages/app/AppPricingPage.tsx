@@ -32,8 +32,8 @@ const subscriptionPlans = [
   {
     name: "Pro",
     slug: "pro",
-    monthlyPrice: 97,
-    annualPrice: 82.45,
+    monthlyPrice: 89,
+    annualPrice: 75.65,
     credits: "500 créditos/mês",
     popular: true,
     cta: "Assinar Pro",
@@ -51,13 +51,13 @@ const subscriptionPlans = [
   {
     name: "Business",
     slug: "business",
-    monthlyPrice: 197,
-    annualPrice: 167.45,
-    credits: "1.500 créditos/mês",
+    monthlyPrice: 129,
+    annualPrice: 109.65,
+    credits: "1.000 créditos/mês",
     popular: false,
     cta: "Assinar Business",
     features: [
-      { label: "1.500 créditos/mês", included: true },
+      { label: "1.000 créditos/mês", included: true },
       { label: "5 buscas simultâneas", included: true },
       { label: "Exportação CSV/Excel", included: true },
       { label: "Todas as fontes", included: true },
