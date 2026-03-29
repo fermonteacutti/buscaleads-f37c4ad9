@@ -207,7 +207,7 @@ export default function PricingPage() {
 
                 <Button variant="outline" className="w-full mb-6" asChild>
                   <a
-                    href="https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20saber%20mais%20sobre%20o%20plano%20Enterprise."
+                    href="https://wa.me/5519974060016?text=Olá!%20Tenho%20interesse%20no%20plano%20Enterprise%20do%20BuscaLead."
                     target="_blank"
                     rel="noopener noreferrer"
                   >
