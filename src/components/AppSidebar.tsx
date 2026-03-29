@@ -7,6 +7,7 @@ import {
   Radar,
   LogOut,
   ExternalLink,
+  Star,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { CreditsBadge } from "@/components/credits/CreditsBadge";
@@ -37,6 +38,7 @@ const mainItems = [
   { title: "Nova Busca", url: "/app/busca", icon: Search },
   { title: "Meus Leads", url: "/app/leads", icon: Users },
   { title: "Créditos", url: "/app/creditos", icon: CreditCard },
+  { title: "Planos", url: "/planos", icon: Star },
   { title: "Configurações", url: "/app/configuracoes", icon: Settings },
 ];
 

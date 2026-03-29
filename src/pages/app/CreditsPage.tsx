@@ -22,8 +22,8 @@ const TRANSACTION_META: Record<string, { label: string; icon: typeof TrendingUp;
 
 const CREDIT_PACKS = [
   { amount: 100, price: 29, popular: false },
-  { amount: 300, price: 69, popular: true },
-  { amount: 1000, price: 199, popular: false },
+  { amount: 300, price: 59, popular: true },
+  { amount: 1000, price: 149, popular: false },
 ];
 
 export default function CreditsPage() {
