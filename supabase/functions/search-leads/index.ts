@@ -49,6 +49,7 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Buscar search
     const { data: search, error: searchError } = await admin
       .from("searches")
       .select("*")
@@ -63,12 +64,38 @@ Deno.serve(async (req) => {
       );
     }
 
+    // PASSO 1: Verificar saldo ANTES de qualquer coisa
+    const { data: balanceData, error: balanceError } = await admin
+      .from("credit_balances")
+      .select("balance")
+      .eq("user_id", userId)
+      .single();
+
+    if (balanceError || !balanceData) {
+      await admin.from("searches").update({ status: "failed", error_message: "Erro ao verificar créditos" }).eq("id", search_id);
+      return new Response(JSON.stringify({ error: "Erro ao verificar créditos" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (balanceData.balance < 1) {
+      await admin.from("searches").update({ status: "failed", error_message: "Créditos insuficientes" }).eq("id", search_id);
+      return new Response(JSON.stringify({ error: "Créditos insuficientes", code: "INSUFFICIENT_CREDITS" }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Limitar leads ao saldo disponível
+    const effectiveDesiredLeads = Math.min(desiredLeads, balanceData.balance);
+
     await admin
       .from("searches")
       .update({ status: "running", started_at: new Date().toISOString() })
       .eq("id", search_id);
 
-    // Build query
+    // PASSO 2: Buscar no Google Places
     let query = search.business_type;
     if (!search.nationwide) {
       if (search.location_city) query += ` em ${search.location_city}`;
@@ -77,10 +104,9 @@ Deno.serve(async (req) => {
       query += " no Brasil";
     }
 
-    // Fetch places with pagination (Google returns up to 20 per page, max 60 total via next_page_token)
     const allPlaces: any[] = [];
     let nextPageToken: string | null = null;
-    const maxPages = Math.ceil(desiredLeads / 20);
+    const maxPages = Math.ceil(effectiveDesiredLeads / 20);
 
     for (let page = 0; page < maxPages; page++) {
       let placesUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&language=pt-BR&key=${googleApiKey}`;
@@ -94,10 +120,7 @@ Deno.serve(async (req) => {
       if (placesData.status !== "OK" && placesData.status !== "ZERO_RESULTS") {
         if (page === 0) {
           console.error("Google Places API error:", placesData);
-          await admin
-            .from("searches")
-            .update({ status: "failed", error_message: `Google API: ${placesData.status}` })
-            .eq("id", search_id);
+          await admin.from("searches").update({ status: "failed", error_message: `Google API: ${placesData.status}` }).eq("id", search_id);
           return new Response(
             JSON.stringify({ error: "Google Places API error", status: placesData.status }),
             { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -107,17 +130,14 @@ Deno.serve(async (req) => {
       }
 
       allPlaces.push(...(placesData.results || []));
-
-      if (allPlaces.length >= desiredLeads || !placesData.next_page_token) break;
-
+      if (allPlaces.length >= effectiveDesiredLeads || !placesData.next_page_token) break;
       nextPageToken = placesData.next_page_token;
-      // Google requires a short delay before using next_page_token
       await new Promise((r) => setTimeout(r, 2000));
     }
 
-    const places = allPlaces.slice(0, desiredLeads);
+    const places = allPlaces.slice(0, effectiveDesiredLeads);
 
-    // Build leads with google_place_id
+    // PASSO 3: Buscar detalhes e montar leads
     const leads = [];
     for (const place of places) {
       let phone = null;
@@ -154,7 +174,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert leads with ON CONFLICT DO NOTHING (dedup by user_id + google_place_id)
+    // PASSO 4: Inserir leads
     let leadsInserted = 0;
     if (leads.length > 0) {
       const { data: insertedLeads, error: insertError } = await admin
@@ -164,46 +184,45 @@ Deno.serve(async (req) => {
 
       if (insertError) {
         console.error("Error inserting leads:", insertError);
-      } else {
-        leadsInserted = insertedLeads?.length || 0;
+        await admin.from("searches").update({ status: "failed", error_message: "Erro ao salvar leads" }).eq("id", search_id);
+        return new Response(JSON.stringify({ error: "Erro ao salvar leads" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
+      leadsInserted = insertedLeads?.length || 0;
     }
 
-    // Charge credits only for NEW leads actually inserted
-    const creditsToCharge = leadsInserted;
-
-    if (creditsToCharge > 0) {
+    // PASSO 5: Debitar créditos apenas pelos leads novos inseridos
+    if (leadsInserted > 0) {
       const { data: debitResult } = await admin.rpc("debit_credits", {
         p_user_id: userId,
-        p_amount: creditsToCharge,
-        p_description: `Busca: ${search.business_type} (${leadsInserted} leads)`,
+        p_amount: leadsInserted,
+        p_description: `Busca: ${search.business_type} em ${search.location_city || "Brasil"} (${leadsInserted} leads)`,
         p_reference_id: search_id,
       });
 
-      if (debitResult && !(debitResult as any).success) {
-        await admin
-          .from("searches")
-          .update({ status: "failed", error_message: "Créditos insuficientes" })
-          .eq("id", search_id);
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes", details: debitResult }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      console.log("Debit result:", debitResult);
     }
 
+    // PASSO 6: Atualizar search como completed
     await admin
       .from("searches")
       .update({
         status: "completed",
         completed_at: new Date().toISOString(),
         leads_found: leadsInserted,
-        credits_used: creditsToCharge,
+        credits_used: leadsInserted,
       })
       .eq("id", search_id);
 
     return new Response(
-      JSON.stringify({ success: true, leads_found: leadsInserted, duplicates_skipped: leads.length - leadsInserted }),
+      JSON.stringify({
+        success: true,
+        leads_found: leadsInserted,
+        duplicates_skipped: leads.length - leadsInserted,
+        credits_used: leadsInserted,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
