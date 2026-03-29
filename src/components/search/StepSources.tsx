@@ -5,11 +5,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const SOURCES = [
   {
-    value: "redes_sociais",
+    value: "google_maps",
     label: "Google Maps",
     description: "Busca por estabelecimentos no Google Maps",
     icon: Globe,
     disabled: false,
+  },
+  {
+    value: "redes_sociais",
+    label: "Redes Sociais",
+    description: "Em breve",
+    icon: Globe,
+    disabled: true,
   },
   {
     value: "cnpj",
