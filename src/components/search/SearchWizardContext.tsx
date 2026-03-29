@@ -27,7 +27,7 @@ const defaultData: SearchFormData = {
   state: "",
   city: "",
   radius: null,
-  sources: [],
+  sources: ["google_maps"],
   hasEmail: false,
   hasPhone: false,
   hasWebsite: false,

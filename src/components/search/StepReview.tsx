@@ -51,7 +51,7 @@ export default function StepReview() {
               {data.sources.length > 0
                 ? data.sources.map((s) => (
                   <Badge key={s} variant="secondary" className="text-xs">
-                    {s === "redes_sociais" ? "Redes Sociais" : s === "cnpj" ? "Base CNPJ" : s.replace("_", " ")}
+                    {s === "google_maps" ? "Google Maps" : s === "redes_sociais" ? "Redes Sociais" : s === "cnpj" ? "Base CNPJ" : s.replace("_", " ")}
                   </Badge>
                 ))
                 : <span className="text-sm text-muted-foreground">Nenhuma selecionada</span>}
