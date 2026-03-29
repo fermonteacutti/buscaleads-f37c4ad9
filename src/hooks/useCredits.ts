@@ -50,10 +50,7 @@ export function useCredits() {
       }
 
       if (balance < estimatedLeads) {
-        toast({
-          title: 'Atenção: créditos baixos',
-          description: `Você tem ${balance} crédito(s). A busca pode retornar até ${estimatedLeads} leads. Apenas os primeiros ${balance} serão cobrados.`,
-        })
+        // Silently allow — the search confirmation toast will be shown instead
         return true
       }
 
