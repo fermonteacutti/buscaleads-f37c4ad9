@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical } from "lucide-react";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useCredits } from "@/hooks/useCredits";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
 
@@ -92,7 +94,38 @@ const creditPacks = [
 export default function AppPricingPage() {
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
   const { isAdmin } = useIsAdmin();
+  const { balance, fetchBalance } = useCredits();
+  const navigate = useNavigate();
+  const initialBalance = useRef<number | null>(null);
+
+  // Polling: when awaitingPayment, check balance every 5s
+  useEffect(() => {
+    if (!awaitingPayment) return;
+    initialBalance.current = balance;
+
+    const interval = setInterval(async () => {
+      await fetchBalance();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [awaitingPayment, fetchBalance]);
+
+  // Detect balance increase → success
+  useEffect(() => {
+    if (!awaitingPayment || initialBalance.current === null) return;
+    if (balance > initialBalance.current) {
+      setAwaitingPayment(false);
+      toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
+      navigate("/app");
+    }
+  }, [balance, awaitingPayment, navigate]);
+
+  const openCheckout = (initPoint: string) => {
+    window.open(initPoint, "_blank");
+    setAwaitingPayment(true);
+  };
 
   const testPlan = {
     name: "Teste",
@@ -125,7 +158,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        window.location.href = data.init_point;
+        openCheckout(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -145,7 +178,7 @@ export default function AppPricingPage() {
       });
       if (error) throw error;
       if (data?.init_point) {
-        window.location.href = data.init_point;
+        openCheckout(data.init_point);
       } else {
         throw new Error("URL de pagamento não recebida");
       }
@@ -158,7 +191,21 @@ export default function AppPricingPage() {
   };
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8 relative">
+      {/* Awaiting payment overlay */}
+      {awaitingPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-8 rounded-2xl border border-border bg-card shadow-lg text-center max-w-sm">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Aguardando confirmação do pagamento...</h2>
+            <p className="text-sm text-muted-foreground">Complete o pagamento na aba do Mercado Pago. Esta página será atualizada automaticamente.</p>
+            <Button variant="ghost" size="sm" onClick={() => setAwaitingPayment(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h1 className="text-2xl font-bold text-foreground">Planos e Créditos</h1>
         <p className="text-sm text-muted-foreground mt-1">Escolha o plano ideal ou compre créditos avulsos.</p>
