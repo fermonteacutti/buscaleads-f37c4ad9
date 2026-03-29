@@ -13,9 +13,8 @@ import type { Tables } from "@/integrations/supabase/types";
 type Credit = Tables<"credits">;
 
 const TRANSACTION_META: Record<string, { label: string; icon: typeof TrendingUp; color: string }> = {
-  plan_renewal: { label: "Renovação", icon: RotateCcw, color: "text-primary" },
   purchase: { label: "Compra", icon: ShoppingCart, color: "text-emerald-600" },
-  usage: { label: "Uso", icon: TrendingDown, color: "text-destructive" },
+  debit: { label: "Uso", icon: TrendingDown, color: "text-destructive" },
   refund: { label: "Reembolso", icon: RotateCcw, color: "text-amber-600" },
   bonus: { label: "Bônus", icon: Gift, color: "text-violet-600" },
 };

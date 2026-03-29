@@ -29,6 +29,89 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { FUNNEL_OPTIONS } from "@/components/leads/lead-types";
 
+function PlanCard() {
+  const [planName, setPlanName] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
+  const [renewsIn, setRenewsIn] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
+      const { data: sub } = await supabase
+        .from("subscriptions")
+        .select("*, plans(name, credits_per_month)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (sub && sub.plans) {
+        const plan = sub.plans as any;
+        setPlanName(plan.name);
+        setCredits(plan.credits_per_month);
+        if (sub.current_period_end) {
+          const end = new Date(sub.current_period_end);
+          const now = new Date();
+          const diffDays = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+          setRenewsIn(`Renova em ${diffDays} dias`);
+        }
+      } else {
+        setPlanName(null);
+      }
+      setLoading(false);
+    }
+    load();
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+    >
+      <Card className="shadow-soft h-full bg-hero text-primary-foreground">
+        <CardContent className="pt-6 flex flex-col justify-between h-full">
+          <div>
+            <p className="text-sm font-medium opacity-80">Plano Atual</p>
+            {loading ? (
+              <p className="text-lg mt-1 opacity-70">Carregando...</p>
+            ) : planName ? (
+              <>
+                <p className="text-2xl font-bold mt-1">{planName}</p>
+                <p className="text-sm opacity-70 mt-2">
+                  {credits.toLocaleString("pt-BR")} créditos/mês {renewsIn && `• ${renewsIn}`}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-2xl font-bold mt-1">Gratuito</p>
+                <p className="text-sm opacity-70 mt-2">
+                  Faça upgrade para mais créditos
+                </p>
+              </>
+            )}
+          </div>
+          <div className="mt-6 flex flex-col gap-2">
+            <Button
+              variant="secondary"
+              className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0"
+              asChild
+            >
+              <Link to="/app/planos">
+                <CreditCard className="h-4 w-4 mr-2" /> {planName ? "Gerenciar Plano" : "Ver Planos"}
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
 const formatSearchDate = (dateStr: string) => {
   const date = new Date(dateStr);
   const now = new Date();
@@ -326,34 +409,7 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <Card className="shadow-soft h-full bg-hero text-primary-foreground">
-            <CardContent className="pt-6 flex flex-col justify-between h-full">
-              <div>
-                <p className="text-sm font-medium opacity-80">Plano Atual</p>
-                <p className="text-2xl font-bold mt-1">Professional</p>
-                <p className="text-sm opacity-70 mt-2">
-                  1.000 créditos/mês • Renova em 15 dias
-                </p>
-              </div>
-              <div className="mt-6 flex flex-col gap-2">
-                <Button
-                  variant="secondary"
-                  className="bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground border-0"
-                  asChild
-                >
-                  <Link to="/app/creditos">
-                    <CreditCard className="h-4 w-4 mr-2" /> Gerenciar Plano
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <PlanCard />
       </div>
 
       {/* Recent Searches */}
