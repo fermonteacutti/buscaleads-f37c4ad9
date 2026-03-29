@@ -40,6 +40,12 @@ function WizardContent() {
   };
 
   const handleSubmit = async () => {
+    const canSearch = validateBeforeSearch(20);
+    if (!canSearch) {
+      setShowCreditModal(true);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const { data: session } = await supabase.auth.getSession();
@@ -76,14 +82,21 @@ function WizardContent() {
 
       toast.info("Busca criada! Buscando leads no Google Maps...");
 
-      // Invoke edge function to search leads
       const { data: result, error: fnError } = await supabase.functions.invoke("search-leads", {
         body: { search_id: insertedSearch.id, max_leads: data.maxLeads },
       });
 
+      if (result?.code === 'INSUFFICIENT_CREDITS') {
+        setShowCreditModal(true);
+        return;
+      }
+
       if (fnError) {
         toast.error("Erro ao buscar leads", { description: fnError.message });
       } else {
+        if (result?.balanceAfter !== undefined) {
+          syncBalanceAfterSearch(result.balanceAfter);
+        }
         toast.success(`Busca concluída! ${result?.leads_found || 0} leads encontrados.`);
       }
 
