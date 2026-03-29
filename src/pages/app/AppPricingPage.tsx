@@ -194,7 +194,7 @@ export default function AppPricingPage() {
                 <span className="inline-flex items-center gap-1 bg-muted px-2 py-0.5 rounded text-xs font-medium text-foreground">
                   ← Voltar à loja
                 </span>{" "}
-                no topo da página do Mercado Pago para retornar e confirmar seus créditos.
+                na parte inferior da página do Mercado Pago para retornar e confirmar seus créditos.
               </p>
             </DialogDescription>
           </DialogHeader>
