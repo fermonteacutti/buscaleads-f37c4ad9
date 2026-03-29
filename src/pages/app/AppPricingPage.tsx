@@ -246,7 +246,7 @@ export default function AppPricingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: subscriptionPlans.length * 0.08 }}
+            transition={{ delay: allPlans.length * 0.08 }}
             className="relative p-6 rounded-2xl border border-border bg-card shadow-soft"
           >
             <h3 className="text-xl font-bold mb-1">Enterprise</h3>
