@@ -99,33 +99,45 @@ export default function AppPricingPage() {
   const { balance, fetchBalance } = useCredits();
   const navigate = useNavigate();
   const initialBalance = useRef<number | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Capture balance before checkout opens
+  const openCheckout = (initPoint: string) => {
+    initialBalance.current = balance;
+    console.log("[Payment] Captured initial balance:", balance);
+    window.open(initPoint, "_blank");
+    setAwaitingPayment(true);
+  };
 
   // Polling: when awaitingPayment, check balance every 5s
   useEffect(() => {
     if (!awaitingPayment) return;
-    initialBalance.current = balance;
 
-    const interval = setInterval(async () => {
+    const poll = async () => {
+      console.log("[Payment] Polling balance...");
       await fetchBalance();
-    }, 5000);
+    };
 
-    return () => clearInterval(interval);
+    // First poll immediately
+    poll();
+    pollingRef.current = setInterval(poll, 5000);
+
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, [awaitingPayment, fetchBalance]);
 
   // Detect balance increase → success
   useEffect(() => {
     if (!awaitingPayment || initialBalance.current === null) return;
+    console.log("[Payment] Balance check:", balance, "vs initial:", initialBalance.current);
     if (balance > initialBalance.current) {
       setAwaitingPayment(false);
+      if (pollingRef.current) clearInterval(pollingRef.current);
       toast.success("✅ Pagamento confirmado! Créditos adicionados à sua conta.");
       navigate("/app");
     }
   }, [balance, awaitingPayment, navigate]);
-
-  const openCheckout = (initPoint: string) => {
-    window.open(initPoint, "_blank");
-    setAwaitingPayment(true);
-  };
 
   const testPlan = {
     name: "Teste",
