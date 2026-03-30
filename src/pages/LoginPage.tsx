@@ -87,6 +87,8 @@ export default function LoginPage() {
       }
     } finally {
       setLoading(false);
+      setTurnstileToken("");
+      turnstileRef.current?.reset();
     }
   };
 
