@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, ExternalLink } from "lucide-react";
+import { Check, X, Sparkles, ShieldCheck, Loader2, ExternalLink, ArrowUp, ArrowDown, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -14,6 +16,9 @@ import {
 } from "@/components/ui/dialog";
 
 type BillingTab = "monthly" | "annual" | "oneoff";
+
+// Plan hierarchy order (higher index = higher tier)
+const PLAN_HIERARCHY = ["free", "starter", "pro", "business", "enterprise"];
 
 const subscriptionPlans = [
   {
@@ -95,14 +100,41 @@ const creditPacks = [
   { id: "pack_1000", amount: 1000, price: 149, perCredit: "0,15" },
 ];
 
+function getPlanTier(slug: string): number {
+  return PLAN_HIERARCHY.indexOf(slug.toLowerCase());
+}
+
 export default function AppPricingPage() {
+  const { user } = useAuth();
   const [tab, setTab] = useState<BillingTab>("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const [checkoutDialog, setCheckoutDialog] = useState<{ open: boolean; url: string | null }>({
     open: false,
     url: null,
   });
-  const allPlans = subscriptionPlans;
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSubscription = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan_id, status, plans(slug)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.plans) {
+        const plans = data.plans as any;
+        setCurrentPlanSlug(plans.slug || null);
+      }
+    };
+    fetchSubscription();
+  }, [user]);
+
+  const currentTier = currentPlanSlug ? getPlanTier(currentPlanSlug) : 0;
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
@@ -159,6 +191,60 @@ export default function AppPricingPage() {
     } finally {
       setLoadingPlan(null);
     }
+  };
+
+  const renderPlanButton = (plan: typeof subscriptionPlans[0], billing: "monthly" | "annual") => {
+    const planTier = getPlanTier(plan.slug);
+    const isCurrentPlan = currentPlanSlug === plan.slug;
+    const isUpgrade = planTier > currentTier;
+    const isDowngrade = planTier < currentTier;
+    const isLoading = loadingPlan === `${plan.slug}_${billing}`;
+
+    if (isCurrentPlan) {
+      return (
+        <Button className="w-full mb-6" variant="secondary" disabled>
+          <Settings className="mr-2 h-4 w-4" />
+          Gerenciar Plano
+        </Button>
+      );
+    }
+
+    if (isDowngrade) {
+      return (
+        <Button
+          className="w-full mb-6"
+          variant="outline"
+          disabled
+          title="Entre em contato para fazer downgrade"
+        >
+          <ArrowDown className="mr-2 h-4 w-4" />
+          Fazer Downgrade
+        </Button>
+      );
+    }
+
+    // Upgrade or no current plan
+    return (
+      <Button
+        className="w-full mb-6"
+        variant={plan.popular ? "default" : "outline"}
+        disabled={!!loadingPlan}
+        onClick={() => handleSubscribe(plan.slug, billing)}
+      >
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Aguarde...
+          </>
+        ) : isUpgrade && currentTier > 0 ? (
+          <>
+            <ArrowUp className="mr-2 h-4 w-4" />
+            Fazer Upgrade
+          </>
+        ) : (
+          plan.cta
+        )}
+      </Button>
+    );
   };
 
   return (
@@ -224,11 +310,11 @@ export default function AppPricingPage() {
       {/* Subscription Plans */}
       {tab !== "oneoff" && (
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {allPlans.map((plan, i) => {
+          {subscriptionPlans.map((plan, i) => {
             const price = tab === "annual" ? plan.annualPrice : plan.monthlyPrice;
             const priceDisplay = `R$ ${price % 1 === 0 ? price : price.toFixed(2).replace(".", ",")}`;
             const billing = tab === "annual" ? "annual" : "monthly";
-            const isLoading = loadingPlan === `${plan.slug}_${billing}`;
+            const isCurrentPlan = currentPlanSlug === plan.slug;
 
             return (
               <motion.div
@@ -237,14 +323,22 @@ export default function AppPricingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
                 className={`relative p-6 rounded-2xl border ${
-                  plan.popular ? "border-accent shadow-glow bg-card" : "border-border bg-card shadow-soft"
+                  isCurrentPlan
+                    ? "border-primary shadow-glow bg-card ring-2 ring-primary/20"
+                    : plan.popular
+                    ? "border-accent shadow-glow bg-card"
+                    : "border-border bg-card shadow-soft"
                 }`}
               >
-                {plan.popular && (
+                {isCurrentPlan ? (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-4 py-1">
+                    Plano Atual
+                  </Badge>
+                ) : plan.popular ? (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground text-xs font-semibold px-4 py-1 rounded-full flex items-center gap-1">
                     <Sparkles className="h-3 w-3" /> Mais Popular
                   </span>
-                )}
+                ) : null}
                 <h3 className="text-xl font-bold mb-1">{plan.name}</h3>
                 <p className="text-xs text-muted-foreground mb-4">{plan.credits}</p>
                 <div className="mb-6">
@@ -252,20 +346,7 @@ export default function AppPricingPage() {
                   <span className="text-muted-foreground">/mês</span>
                 </div>
 
-                <Button
-                  className="w-full mb-6"
-                  variant={plan.popular ? "default" : "outline"}
-                  disabled={!!loadingPlan}
-                  onClick={() => handleSubscribe(plan.slug, billing)}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Aguarde...
-                    </>
-                  ) : (
-                    plan.cta
-                  )}
-                </Button>
+                {renderPlanButton(plan, billing)}
 
                 <ul className="space-y-2">
                   {plan.features.map((f) => (
@@ -287,7 +368,7 @@ export default function AppPricingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: allPlans.length * 0.08 }}
+            transition={{ delay: subscriptionPlans.length * 0.08 }}
             className="relative p-6 rounded-2xl border border-border bg-card shadow-soft"
           >
             <h3 className="text-xl font-bold mb-1">Enterprise</h3>
