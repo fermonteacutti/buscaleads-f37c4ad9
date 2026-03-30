@@ -50,6 +50,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuário";
   const userEmail = user?.email || "";
   const avatarUrl = user?.user_metadata?.avatar_url || "";
