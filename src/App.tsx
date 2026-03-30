@@ -56,6 +56,7 @@ const App = () => (
                 <Route path="pagamento/sucesso" element={<PaymentSuccessPage />} />
                 <Route path="pagamento/erro" element={<PaymentErrorPage />} />
                 <Route path="pagamento/pendente" element={<PaymentPendingPage />} />
+                <Route path="admin" element={<AdminPage />} />
               </Route>
             </Route>
             <Route path="/login" element={<LoginPage />} />

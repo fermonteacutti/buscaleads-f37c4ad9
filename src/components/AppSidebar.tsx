@@ -104,6 +104,31 @@ export function AppSidebar() {
                   </Tooltip>
                 </SidebarMenuItem>
               ))}
+
+              {/* Admin link - only visible for admins */}
+              {isAdmin && (
+                <SidebarMenuItem>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton asChild isActive={isActive("/app/admin")}>
+                        <NavLink
+                          to="/app/admin"
+                          className="hover:bg-sidebar-accent/50"
+                          activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          {!collapsed && <span>Admin</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    {collapsed && (
+                      <TooltipContent side="right">
+                        Admin
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
