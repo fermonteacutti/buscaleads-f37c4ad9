@@ -476,6 +476,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_cpf_exists: { Args: { p_cpf: string }; Returns: boolean }
       debit_credits: {
         Args: {
           p_amount: number
