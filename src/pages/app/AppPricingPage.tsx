@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical, ExternalLink } from "lucide-react";
+import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 import {
   Dialog,
   DialogContent,
@@ -103,23 +102,7 @@ export default function AppPricingPage() {
     open: false,
     url: null,
   });
-  const { isAdmin } = useIsAdmin();
-
-  const testPlan = {
-    name: "Teste",
-    slug: "teste",
-    monthlyPrice: 1,
-    annualPrice: 1,
-    credits: "1 crédito (teste)",
-    popular: false,
-    cta: "Comprar Teste R$1",
-    features: [
-      { label: "1 crédito para teste", included: true },
-      { label: "Validação de checkout", included: true },
-    ],
-  };
-
-  const allPlans = isAdmin ? [...subscriptionPlans, testPlan] : subscriptionPlans;
+  const allPlans = subscriptionPlans;
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
