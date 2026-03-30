@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2, RefreshCw, CreditCard } from "lucide-react";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
+
+const TURNSTILE_SITE_KEY = "0x4AAAAAACxwTa7dGeug7_fu";
 
 export default function LoginPage() {
   const [searchParams] = useSearchParams();
@@ -26,9 +29,15 @@ export default function LoginPage() {
   const [signUpConfirmation, setSignUpConfirmation] = useState(false);
   const [signUpEmail, setSignUpEmail] = useState("");
   const [resendLoading, setResendLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error("Aguarde a verificação de segurança (Turnstile).");
+      return;
+    }
     if (isSignUp && !termsAccepted) {
       toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
       return;
@@ -58,13 +67,14 @@ export default function LoginPage() {
           options: {
             data: { full_name: fullName, cpf: cpfDigits },
             emailRedirectTo: `${window.location.origin}/login`,
+            captchaToken: turnstileToken,
           },
         });
         if (error) throw error;
         setSignUpEmail(email);
         setSignUpConfirmation(true);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: turnstileToken } });
         if (error) throw error;
         toast.success("Login realizado!");
         navigate("/app");
@@ -77,6 +87,8 @@ export default function LoginPage() {
       }
     } finally {
       setLoading(false);
+      setTurnstileToken("");
+      turnstileRef.current?.reset();
     }
   };
 
@@ -386,7 +398,16 @@ export default function LoginPage() {
               </label>
             )}
 
-            <Button variant="hero" className="w-full" type="submit" disabled={loading}>
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={setTurnstileToken}
+              onError={() => setTurnstileToken("")}
+              onExpire={() => setTurnstileToken("")}
+              options={{ theme: "auto", size: "flexible" }}
+            />
+
+            <Button variant="hero" className="w-full" type="submit" disabled={loading || !turnstileToken}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               {isSignUp ? "Criar Conta Grátis" : "Entrar"} {!loading && <ArrowRight className="h-4 w-4 ml-1" />}
             </Button>
