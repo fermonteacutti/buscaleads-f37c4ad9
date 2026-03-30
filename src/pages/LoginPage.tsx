@@ -74,7 +74,7 @@ export default function LoginPage() {
         setSignUpEmail(email);
         setSignUpConfirmation(true);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ email, password, options: { captchaToken: turnstileToken } });
         if (error) throw error;
         toast.success("Login realizado!");
         navigate("/app");
