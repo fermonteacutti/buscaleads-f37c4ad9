@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, FlaskConical, ExternalLink } from "lucide-react";
+import { Check, X, Sparkles, Zap, ShieldCheck, Loader2, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
 import {
   Dialog,
   DialogContent,
