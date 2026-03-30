@@ -152,6 +152,46 @@ async function processPayment(paymentData: any, paymentId: string) {
 
   console.log(`Added ${intent.credits} credits to user ${intent.user_id}`);
 
+  // If it's a plan purchase, update the subscription
+  if (intent.type === "plan") {
+    const planSlug = intent.plan_id; // e.g. "starter", "pro", "business"
+    const { data: plan } = await supabase
+      .from("plans")
+      .select("id")
+      .eq("slug", planSlug)
+      .single();
+
+    if (plan) {
+      const billingCycle = intent.billing || "monthly";
+      const periodDays = billingCycle === "annual" ? 365 : 30;
+      const now = new Date();
+      const periodEnd = new Date(now.getTime() + periodDays * 24 * 60 * 60 * 1000);
+
+      // Deactivate existing active subscriptions
+      await supabase
+        .from("subscriptions")
+        .update({ status: "canceled", canceled_at: now.toISOString() })
+        .eq("user_id", intent.user_id)
+        .eq("status", "active");
+
+      // Create new active subscription
+      await supabase
+        .from("subscriptions")
+        .insert({
+          user_id: intent.user_id,
+          plan_id: plan.id,
+          status: "active",
+          billing_cycle: billingCycle,
+          current_period_start: now.toISOString(),
+          current_period_end: periodEnd.toISOString(),
+        });
+
+      console.log(`Updated subscription to ${planSlug} for user ${intent.user_id}`);
+    } else {
+      console.error(`Plan not found for slug: ${planSlug}`);
+    }
+  }
+
   return new Response(JSON.stringify({ ok: true, credits_added: intent.credits }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
