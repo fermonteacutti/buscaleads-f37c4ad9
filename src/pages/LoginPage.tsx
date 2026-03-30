@@ -328,13 +328,36 @@ export default function LoginPage() {
 
           <form className="space-y-3" onSubmit={handleSubmit}>
             {isSignUp && (
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Nome completo</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input className="pl-10" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">Nome completo</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input className="pl-10" placeholder="Seu nome" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                  </div>
                 </div>
-              </div>
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block">CPF</label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-10"
+                      placeholder="000.000.000-00"
+                      value={cpf}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        const masked = digits
+                          .replace(/(\d{3})(\d)/, "$1.$2")
+                          .replace(/(\d{3})(\d)/, "$1.$2")
+                          .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                        setCpf(masked);
+                      }}
+                      required
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
+              </>
             )}
             <div>
               <label className="text-sm font-medium mb-1.5 block">E-mail</label>
