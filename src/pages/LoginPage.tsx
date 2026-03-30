@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2, RefreshCw } from "lucide-react";
+import { Radar, Mail, Lock, User, ArrowRight, Loader2, Wand2, RefreshCw, CreditCard } from "lucide-react";
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
