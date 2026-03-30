@@ -476,6 +476,25 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_adjust_credits: {
+        Args: {
+          p_amount: number
+          p_description: string
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
+      admin_list_credits: { Args: { p_target_user_id: string }; Returns: Json }
+      admin_list_payments: { Args: { p_target_user_id: string }; Returns: Json }
+      admin_list_users: { Args: never; Returns: Json }
+      admin_update_subscription: {
+        Args: {
+          p_plan_slug: string
+          p_status?: string
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
       check_cpf_exists: { Args: { p_cpf: string }; Returns: boolean }
       debit_credits: {
         Args: {
