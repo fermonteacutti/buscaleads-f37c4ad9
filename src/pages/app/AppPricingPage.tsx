@@ -105,21 +105,7 @@ export default function AppPricingPage() {
   });
   const { isAdmin } = useIsAdmin();
 
-  const testPlan = {
-    name: "Teste",
-    slug: "teste",
-    monthlyPrice: 1,
-    annualPrice: 1,
-    credits: "1 crédito (teste)",
-    popular: false,
-    cta: "Comprar Teste R$1",
-    features: [
-      { label: "1 crédito para teste", included: true },
-      { label: "Validação de checkout", included: true },
-    ],
-  };
-
-  const allPlans = isAdmin ? [...subscriptionPlans, testPlan] : subscriptionPlans;
+  const allPlans = subscriptionPlans;
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
     { value: "monthly", label: "Mensal" },
