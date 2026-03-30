@@ -90,7 +90,7 @@ function PlanCard() {
               <>
                 <p className="text-2xl font-bold mt-1">Gratuito</p>
                 <p className="text-sm opacity-70 mt-2">
-                  Faça upgrade para mais créditos
+                  Créditos únicos — sem renovação
                 </p>
               </>
             )}
@@ -102,7 +102,7 @@ function PlanCard() {
               asChild
             >
               <Link to="/app/planos">
-                <CreditCard className="h-4 w-4 mr-2" /> {planName ? "Gerenciar Plano" : "Ver Planos"}
+                <CreditCard className="h-4 w-4 mr-2" /> {planName ? "Gerenciar Plano" : "Fazer Upgrade"}
               </Link>
             </Button>
           </div>
