@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [cpf, setCpf] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [signUpConfirmation, setSignUpConfirmation] = useState(false);
   const [signUpEmail, setSignUpEmail] = useState("");
