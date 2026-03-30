@@ -34,6 +34,10 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error("Aguarde a verificação de segurança (Turnstile).");
+      return;
+    }
     if (isSignUp && !termsAccepted) {
       toast.error("Você precisa aceitar os Termos de Uso e a Política de Privacidade.");
       return;
