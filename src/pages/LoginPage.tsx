@@ -36,11 +36,31 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (isSignUp) {
+        const cpfDigits = cpf.replace(/\D/g, "");
+        if (cpfDigits.length !== 11) {
+          toast.error("CPF inválido. Informe os 11 dígitos.");
+          setLoading(false);
+          return;
+        }
+
+        // Check if CPF already exists
+        const { data: existingProfile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("cpf", cpfDigits)
+          .maybeSingle();
+
+        if (existingProfile) {
+          toast.error("Este CPF já possui uma conta cadastrada. Faça login ou recupere sua senha.");
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: fullName },
+            data: { full_name: fullName, cpf: cpfDigits },
             emailRedirectTo: `${window.location.origin}/login`,
           },
         });
