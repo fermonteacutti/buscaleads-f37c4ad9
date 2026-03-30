@@ -67,6 +67,7 @@ export default function LoginPage() {
           options: {
             data: { full_name: fullName, cpf: cpfDigits },
             emailRedirectTo: `${window.location.origin}/login`,
+            captchaToken: turnstileToken,
           },
         });
         if (error) throw error;
