@@ -398,7 +398,16 @@ export default function LoginPage() {
               </label>
             )}
 
-            <Button variant="hero" className="w-full" type="submit" disabled={loading}>
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={setTurnstileToken}
+              onError={() => setTurnstileToken("")}
+              onExpire={() => setTurnstileToken("")}
+              options={{ theme: "auto", size: "flexible" }}
+            />
+
+            <Button variant="hero" className="w-full" type="submit" disabled={loading || !turnstileToken}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               {isSignUp ? "Criar Conta Grátis" : "Entrar"} {!loading && <ArrowRight className="h-4 w-4 ml-1" />}
             </Button>
