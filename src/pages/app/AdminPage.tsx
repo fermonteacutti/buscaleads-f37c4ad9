@@ -213,8 +213,8 @@ export default function AdminPage() {
       ]);
       if (creditsRes.error) throw creditsRes.error;
       if (paymentsRes.error) throw paymentsRes.error;
-      setCreditHistory((creditsRes.data as CreditTransaction[]) || []);
-      setPaymentHistory((paymentsRes.data as PaymentRecord[]) || []);
+      setCreditHistory((creditsRes.data as unknown as CreditTransaction[]) || []);
+      setPaymentHistory((paymentsRes.data as unknown as PaymentRecord[]) || []);
     } catch (err: any) {
       toast.error(err.message || "Erro ao carregar histórico");
     } finally {
