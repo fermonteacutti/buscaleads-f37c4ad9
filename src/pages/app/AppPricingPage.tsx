@@ -102,8 +102,6 @@ export default function AppPricingPage() {
     open: false,
     url: null,
   });
-  const { isAdmin } = useIsAdmin();
-
   const allPlans = subscriptionPlans;
 
   const tabs: { value: BillingTab; label: string; extra?: string }[] = [
