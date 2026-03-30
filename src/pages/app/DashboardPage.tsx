@@ -90,7 +90,7 @@ function PlanCard() {
               <>
                 <p className="text-2xl font-bold mt-1">Gratuito</p>
                 <p className="text-sm opacity-70 mt-2">
-                  Faça upgrade para mais créditos
+                  Créditos únicos — sem renovação
                 </p>
               </>
             )}
