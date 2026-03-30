@@ -120,7 +120,7 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase.rpc("admin_list_users");
       if (error) throw error;
-      setUsers((data as AdminUser[]) || []);
+      setUsers((data as unknown as AdminUser[]) || []);
     } catch (err: any) {
       toast.error(err.message || "Erro ao carregar usuários");
     } finally {
