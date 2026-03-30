@@ -43,14 +43,10 @@ export default function LoginPage() {
           return;
         }
 
-        // Check if CPF already exists
-        const { data: existingProfile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("cpf", cpfDigits)
-          .maybeSingle();
+        // Check if CPF already exists using RPC (bypasses RLS)
+        const { data: cpfExists } = await supabase.rpc("check_cpf_exists", { p_cpf: cpfDigits });
 
-        if (existingProfile) {
+        if (cpfExists) {
           toast.error("Este CPF já possui uma conta cadastrada. Faça login ou recupere sua senha.");
           setLoading(false);
           return;
