@@ -167,24 +167,19 @@ async function processPayment(paymentData: any, paymentId: string) {
       const now = new Date();
       const periodEnd = new Date(now.getTime() + periodDays * 24 * 60 * 60 * 1000);
 
-      // Deactivate existing active subscriptions
+      // Update existing subscription (unique constraint on user_id)
       await supabase
         .from("subscriptions")
-        .update({ status: "canceled", canceled_at: now.toISOString() })
-        .eq("user_id", intent.user_id)
-        .eq("status", "active");
-
-      // Create new active subscription
-      await supabase
-        .from("subscriptions")
-        .insert({
-          user_id: intent.user_id,
+        .update({
           plan_id: plan.id,
           status: "active",
           billing_cycle: billingCycle,
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),
-        });
+          canceled_at: null,
+          updated_at: now.toISOString(),
+        })
+        .eq("user_id", intent.user_id);
 
       console.log(`Updated subscription to ${planSlug} for user ${intent.user_id}`);
     } else {
