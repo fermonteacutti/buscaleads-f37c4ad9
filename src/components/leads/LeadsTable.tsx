@@ -39,11 +39,11 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead className="w-[220px]">Empresa</TableHead>
-              <TableHead>Contato</TableHead>
-              <TableHead>Local</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead className="w-[150px]">Funil</TableHead>
+              <TableHead className="min-w-[180px]">Empresa</TableHead>
+              <TableHead className="min-w-[160px]">Contato</TableHead>
+              <TableHead className="min-w-[100px]">Local</TableHead>
+              <TableHead className="min-w-[100px]">Tags</TableHead>
+              <TableHead className="w-[130px]">Funil</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,58 +55,61 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
                   className="group hover:bg-muted/30 transition-colors cursor-pointer"
                   onClick={() => setSelectedLead(lead)}
                 >
-                  <TableCell>
-                    <p className="text-sm font-medium text-foreground truncate max-w-[200px]">
+                  <TableCell className="py-3">
+                    <p className="text-sm font-medium text-foreground truncate max-w-[220px]">
                       {lead.company_name || "Sem nome"}
                     </p>
                     {lead.contact_name && (
-                      <p className="text-xs text-muted-foreground truncate">{lead.contact_name}</p>
+                      <p className="text-xs text-muted-foreground truncate max-w-[220px]">{lead.contact_name}</p>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-0.5">
+                  <TableCell className="py-3">
+                    <div className="flex flex-col gap-0.5 max-w-[220px]">
                       {lead.email && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" /> {lead.email}
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                          <Mail className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{lead.email}</span>
                         </span>
                       )}
                       {lead.phone && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Phone className="h-3 w-3" /> {lead.phone}
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                          <Phone className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{lead.phone}</span>
                         </span>
                       )}
                       {lead.website && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Globe className="h-3 w-3" /> {lead.website}
+                        <span className="flex items-center gap-1.5 text-xs text-muted-foreground truncate">
+                          <Globe className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{lead.website}</span>
                         </span>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-3">
                     {(lead.city || lead.state) ? (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        {[lead.city, lead.state].filter(Boolean).join(", ")}
+                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        <span>{[lead.city, lead.state].filter(Boolean).join(" - ")}</span>
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground/50">—</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-3">
                     <div className="flex flex-wrap gap-1">
-                      {lead.tags?.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {lead.tags?.slice(0, 2).map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-[10px] px-1.5 py-0 whitespace-nowrap">
                           {tag}
                         </Badge>
                       ))}
-                      {(lead.tags?.length ?? 0) > 3 && (
+                      {(lead.tags?.length ?? 0) > 2 && (
                         <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          +{(lead.tags?.length ?? 0) - 3}
+                          +{(lead.tags?.length ?? 0) - 2}
                         </Badge>
                       )}
                     </div>
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={lead.funnel_status}
                       onValueChange={(v) => onStatusChange(lead.id, v as Lead["funnel_status"])}

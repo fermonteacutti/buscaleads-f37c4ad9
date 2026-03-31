@@ -34,7 +34,6 @@ export default function LeadsPage() {
 
   useEffect(() => { fetchLeads(); }, []);
 
-  // Client-side filtering
   const filtered = useMemo(() => {
     let result = leads;
     const q = filters.search.toLowerCase().trim();
@@ -65,7 +64,6 @@ export default function LeadsPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  // Reset page when filters change
   useEffect(() => { setPage(0); }, [filters]);
 
   const handleStatusChange = async (id: string, status: Lead["funnel_status"]) => {
@@ -78,14 +76,14 @@ export default function LeadsPage() {
   };
 
   return (
-    <div className="p-4 lg:p-8 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" /> Meus Leads
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-0.5">
             {filtered.length} lead{filtered.length !== 1 && "s"} encontrado{filtered.length !== 1 && "s"}
           </p>
         </div>
@@ -108,10 +106,9 @@ export default function LeadsPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         <LeadsFilterSidebar filters={filters} onChange={setFilters} />
 
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 min-w-0 space-y-4">
           <LeadsTable leads={paginated} onStatusChange={handleStatusChange} onLeadUpdated={fetchLeads} />
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-muted-foreground">
