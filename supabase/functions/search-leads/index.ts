@@ -6,6 +6,65 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Envia lead ao CRM do Evo AI
+async function sendLeadToEvoAI(lead: {
+  company_name: string | null;
+  phone: string | null;
+  email: string | null;
+  city: string | null;
+  state: string | null;
+  lead_id: string;
+}) {
+  const evoApiUrl = Deno.env.get("EVOAI_API_URL");
+  const evoApiToken = Deno.env.get("EVOAI_API_TOKEN");
+  const evoPipelineId = Deno.env.get("EVOAI_PIPELINE_ID");
+
+  if (!evoApiUrl || !evoApiToken || !evoPipelineId) {
+    console.warn("Evo AI env vars not configured — skipping CRM sync");
+    return null;
+  }
+
+  try {
+    const phone = lead.phone?.replace(/\D/g, "") || null;
+    const phoneE164 = phone && phone.length >= 10
+      ? phone.startsWith("55") ? phone : `55${phone}`
+      : null;
+
+    const payload = {
+      name: lead.company_name || "Lead sem nome",
+      phone: phoneE164,
+      email: lead.email || null,
+      custom_attributes: {
+        cidade: lead.city || "",
+        estado: lead.state || "",
+        origem: "BuscaLead",
+        lead_id: lead.lead_id,
+      },
+      pipeline_id: evoPipelineId,
+    };
+
+    const response = await fetch(`${evoApiUrl}/api/v1/contacts`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": evoApiToken,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("Evo AI contact creation failed:", err);
+      return null;
+    }
+
+    return await response.json();
+  } catch (e) {
+    console.error("Evo AI sync error:", e);
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -49,7 +108,6 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Buscar search
     const { data: search, error: searchError } = await admin
       .from("searches")
       .select("*")
@@ -64,7 +122,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // PASSO 1: Verificar saldo ANTES de qualquer coisa
     const { data: balanceData, error: balanceError } = await admin
       .from("credit_balances")
       .select("balance")
@@ -87,7 +144,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Limitar leads ao saldo disponível
     const effectiveDesiredLeads = Math.min(desiredLeads, balanceData.balance);
 
     await admin
@@ -95,7 +151,6 @@ Deno.serve(async (req) => {
       .update({ status: "running", started_at: new Date().toISOString() })
       .eq("id", search_id);
 
-    // PASSO 2: Buscar no Google Places
     let query = search.business_type;
     if (!search.nationwide) {
       if (search.location_city) query += ` em ${search.location_city}`;
@@ -137,7 +192,6 @@ Deno.serve(async (req) => {
 
     const places = allPlaces.slice(0, effectiveDesiredLeads);
 
-    // PASSO 3: Buscar detalhes e montar leads
     const leads = [];
     for (const place of places) {
       let phone = null;
@@ -176,11 +230,13 @@ Deno.serve(async (req) => {
 
     // PASSO 4: Inserir leads
     let leadsInserted = 0;
+    let insertedLeadRows: any[] = [];
+
     if (leads.length > 0) {
       const { data: insertedLeads, error: insertError } = await admin
         .from("leads")
         .upsert(leads, { onConflict: "user_id,google_place_id", ignoreDuplicates: true })
-        .select("id");
+        .select("id, company_name, phone, email, city, state");
 
       if (insertError) {
         console.error("Error inserting leads:", insertError);
@@ -190,10 +246,30 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      leadsInserted = insertedLeads?.length || 0;
+      insertedLeadRows = insertedLeads || [];
+      leadsInserted = insertedLeadRows.length;
     }
 
-    // PASSO 5: Debitar créditos apenas pelos leads novos inseridos
+    // PASSO 4.5: Enviar leads novos ao Evo AI CRM (fire-and-forget)
+    if (insertedLeadRows.length > 0) {
+      Promise.allSettled(
+        insertedLeadRows.map((lead) =>
+          sendLeadToEvoAI({
+            company_name: lead.company_name,
+            phone: lead.phone,
+            email: lead.email,
+            city: lead.city,
+            state: lead.state,
+            lead_id: lead.id,
+          })
+        )
+      ).then((results) => {
+        const synced = results.filter((r) => r.status === "fulfilled" && r.value).length;
+        console.log(`Evo AI CRM sync: ${synced}/${insertedLeadRows.length} leads enviados`);
+      });
+    }
+
+    // PASSO 5: Debitar créditos
     if (leadsInserted > 0) {
       const { data: debitResult } = await admin.rpc("debit_credits", {
         p_user_id: userId,
