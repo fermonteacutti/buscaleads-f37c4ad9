@@ -10,7 +10,7 @@ const corsHeaders = {
 async function sendLeadToEvoAI(lead: {
   company_name: string | null;
   phone: string | null;
-  email: lead.email || "sem-email@buscalead.ia.br",
+  email: string | null;
   city: string | null;
   state: string | null;
   lead_id: string;
@@ -34,7 +34,7 @@ async function sendLeadToEvoAI(lead: {
       contact: {
         name: lead.company_name || "Lead sem nome",
         phone: phoneE164,
-        email: lead.email || "",
+        email: lead.email || "sem-email@buscalead.ia.br",
       },
       deal: {
         pipeline_id: evoPipelineId,
