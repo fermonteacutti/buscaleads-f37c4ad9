@@ -15,11 +15,10 @@ async function sendLeadToEvoAI(lead: {
   state: string | null;
   lead_id: string;
 }) {
-  const evoApiUrl = Deno.env.get("EVOAI_API_URL");
   const evoApiToken = Deno.env.get("EVOAI_API_TOKEN");
   const evoPipelineId = Deno.env.get("EVOAI_PIPELINE_ID");
 
-  if (!evoApiUrl || !evoApiToken || !evoPipelineId) {
+  if (!evoApiToken || !evoPipelineId) {
     console.warn("Evo AI env vars not configured — skipping CRM sync");
     return null;
   }
@@ -31,30 +30,35 @@ async function sendLeadToEvoAI(lead: {
       : null;
 
     const payload = {
-      name: lead.company_name || "Lead sem nome",
-      phone: phoneE164,
-      email: lead.email || null,
-      custom_attributes: {
+      contact: {
+        name: lead.company_name || "Lead sem nome",
+        phone: phoneE164,
+        email: lead.email || null,
+      },
+      deal: {
+        pipeline_id: evoPipelineId,
+        name: lead.company_name || "Lead sem nome",
+      },
+      custom_fields: {
+        source: "BuscaLead",
         cidade: lead.city || "",
         estado: lead.state || "",
-        origem: "BuscaLead",
         lead_id: lead.lead_id,
       },
-      pipeline_id: evoPipelineId,
     };
 
-    const response = await fetch(`${evoApiUrl}/api/v1/contacts`, {
+    const response = await fetch("https://api.evoai.app/public/api/v1/leads", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": evoApiToken,
+        "api_access_token": evoApiToken,
       },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const err = await response.text();
-      console.error("Evo AI contact creation failed:", err);
+      console.error("Evo AI lead creation failed:", err);
       return null;
     }
 
