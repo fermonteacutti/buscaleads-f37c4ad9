@@ -34,7 +34,7 @@ async function sendLeadToEvoAI(lead: {
       contact: {
         name: lead.company_name || "Lead sem nome",
         phone: phoneE164,
-        email: lead.email || "sem-email@buscalead.ia.br",
+        email: lead.email || `lead-${lead.lead_id}@sem-email.interno`,
       },
       deal: {
         pipeline_id: evoPipelineId,
