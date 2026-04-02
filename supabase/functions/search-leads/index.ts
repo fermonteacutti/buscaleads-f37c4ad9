@@ -10,7 +10,7 @@ const corsHeaders = {
 async function sendLeadToEvoAI(lead: {
   company_name: string | null;
   phone: string | null;
-  email: string | null;
+  email: lead.email || "sem-email@buscalead.ia.br",
   city: string | null;
   state: string | null;
   lead_id: string;
