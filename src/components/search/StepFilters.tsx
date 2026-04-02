@@ -48,9 +48,9 @@ export default function StepFilters() {
         <RadioGroup
           value={String(data.maxLeads)}
           onValueChange={(v) => updateData({ maxLeads: Number(v) })}
-          className="grid grid-cols-4 gap-2"
+          className="grid grid-cols-5 gap-2"
         >
-          {[20, 50, 100, 200].map((n) => (
+          {[5, 20, 50, 100, 200].map((n) => (
             <Label
               key={n}
               htmlFor={`qty-${n}`}
