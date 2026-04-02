@@ -17,8 +17,8 @@ async function sendLeadToEvoAI(lead: {
 }) {
   const evoApiToken = Deno.env.get("EVOAI_API_TOKEN");
   const evoPipelineId = Deno.env.get("EVOAI_PIPELINE_ID");
-  const evoStageId = "770e8400-e29b-41d4-a716-446655440002";
-
+  const evoStageId = "63ae1b04-44dc-4a31-a8b7-676f86c399fc";
+  
   if (!evoApiToken || !evoPipelineId) {
     console.warn("Evo AI env vars not configured — skipping CRM sync");
     return null;
