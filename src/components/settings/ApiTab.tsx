@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Key, Copy, Eye, EyeOff, Plus, Trash2, Loader2 } from "lucide-react";
+import { Key, Copy, Eye, EyeOff, Plus, Trash2, Loader2, Lock, ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
