@@ -162,7 +162,7 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
                     </Select>
                   </TableCell>
                   <TableCell className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                    {showProspect && (
+                    {canProspect && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -173,6 +173,11 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
                       >
                         <Send className={cn("h-4 w-4", isSending && "animate-pulse")} />
                       </Button>
+                    )}
+                    {alreadyContacted && (
+                      <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground" title="Já contatado">
+                        <Check className="h-4 w-4" />
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
