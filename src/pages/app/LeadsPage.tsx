@@ -17,12 +17,13 @@ const PAGE_SIZE = 20;
 interface LeadFilters {
   search: string;
   funnelStatus: string;
+  city: string;
   state: string;
   hasEmail: boolean;
   hasPhone: boolean;
 }
 
-const DEFAULT_FILTERS: LeadFilters = { search: "", funnelStatus: "all", state: "", hasEmail: false, hasPhone: false };
+const DEFAULT_FILTERS: LeadFilters = { search: "", funnelStatus: "all", city: "", state: "", hasEmail: false, hasPhone: false };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
