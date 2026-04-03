@@ -126,18 +126,18 @@ Deno.serve(async (req) => {
     }
 
     // Envia e-mail via Resend
+    const emailHtml = EMAIL_HTML.replace("{{EMAIL}}", encodeURIComponent(to_email));
     const resendResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
-      const emailHtml = EMAIL_HTML.replace("{{EMAIL}}", encodeURIComponent(to_email));
       body: JSON.stringify({
         from: "Certifica SP <noreply@buscalead.ia.br>",
         to: [to_email],
         subject: "Parceria em Certificado Digital — Proposta para o seu Escritório",
-        html: EMAIL_HTML,
+        html: emailHtml,
       }),
     });
 
