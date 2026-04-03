@@ -159,6 +159,13 @@ export default function LeadsPage() {
           />
         </div>
         <Input
+          placeholder="Cidade"
+          value={filters.city}
+          onChange={(e) => update({ city: e.target.value })}
+          maxLength={50}
+          className="w-40"
+        />
+        <Input
           placeholder="UF"
           value={filters.state}
           onChange={(e) => update({ state: e.target.value.toUpperCase() })}
