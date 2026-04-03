@@ -86,7 +86,7 @@ export default function CreditsPage() {
               <CardHeader className="pb-2">
                 {pack.popular && <Badge className="w-fit mb-1">Mais popular</Badge>}
                 <CardTitle className="text-xl">{pack.amount} créditos</CardTitle>
-                <CardDescription>R$ {pack.price},00</CardDescription>
+                <CardDescription>R$ {pack.price.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground mb-4">R$ {(pack.price / pack.amount).toFixed(2)}/crédito</p>

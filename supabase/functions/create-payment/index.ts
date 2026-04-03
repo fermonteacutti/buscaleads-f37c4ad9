@@ -14,9 +14,9 @@ const planConfig: Record<string, { monthly: number; annual: number; credits: num
 };
 
 const creditPackConfig: Record<string, { price: number; credits: number; name: string }> = {
-  pack_100: { price: 2900, credits: 100, name: "100 Créditos" },
-  pack_300: { price: 5900, credits: 300, name: "300 Créditos" },
-  pack_1000: { price: 14900, credits: 1000, name: "1.000 Créditos" },
+  pack_100: { price: 8990, credits: 100, name: "100 Créditos" },
+  pack_300: { price: 21490, credits: 300, name: "300 Créditos" },
+  pack_1000: { price: 39900, credits: 1000, name: "1.000 Créditos" },
 };
 
 Deno.serve(async (req) => {

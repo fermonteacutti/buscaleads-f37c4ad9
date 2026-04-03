@@ -19,9 +19,9 @@ interface InsufficientCreditsModalProps {
 }
 
 const CREDIT_PACKS = [
-  { credits: 100, price: 'R$ 29,90', highlight: false },
-  { credits: 300, price: 'R$ 69,90', highlight: true, badge: 'Mais popular' },
-  { credits: 1000, price: 'R$ 179,90', highlight: false, badge: 'Melhor valor' },
+  { credits: 100, price: 'R$ 89,90', highlight: false },
+  { credits: 300, price: 'R$ 214,90', highlight: true, badge: 'Mais popular' },
+  { credits: 1000, price: 'R$ 399,00', highlight: false, badge: 'Melhor valor' },
 ]
 
 export function InsufficientCreditsModal({
