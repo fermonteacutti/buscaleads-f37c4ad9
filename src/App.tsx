@@ -25,6 +25,7 @@ import PaymentSuccessPage from "./pages/app/PaymentSuccessPage";
 import PaymentErrorPage from "./pages/app/PaymentErrorPage";
 import PaymentPendingPage from "./pages/app/PaymentPendingPage";
 import AdminPage from "./pages/app/AdminPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
