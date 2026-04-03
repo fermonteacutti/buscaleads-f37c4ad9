@@ -1,19 +1,24 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
+const HTML_HEADERS = {
+  "Content-Type": "text/html; charset=utf-8",
+  "X-Content-Type-Options": "nosniff",
+};
+
 Deno.serve(async (req) => {
   const url = new URL(req.url);
   const email = url.searchParams.get("email");
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const admin = createClient(supabaseUrl, supabaseServiceKey);
-
   if (!email) {
     return new Response(htmlPage("Erro", "Link de descadastro inválido."), {
       status: 400,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: HTML_HEADERS,
     });
   }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const admin = createClient(supabaseUrl, supabaseServiceKey);
 
   const { error } = await admin
     .from("email_unsubscribes")
@@ -22,7 +27,7 @@ Deno.serve(async (req) => {
   if (error) {
     return new Response(htmlPage("Erro", "Ocorreu um erro. Tente novamente."), {
       status: 500,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
+      headers: HTML_HEADERS,
     });
   }
 
@@ -31,7 +36,7 @@ Deno.serve(async (req) => {
       "Descadastro realizado",
       `O e-mail <strong>${email}</strong> foi removido da nossa lista. Você não receberá mais mensagens da Certifica SP.`
     ),
-    { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    { status: 200, headers: HTML_HEADERS }
   );
 });
 
