@@ -81,7 +81,8 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
           <TableBody>
             {leads.map((lead) => {
               const funnel = funnelLabel(lead.funnel_status);
-              const showProspect = hasRealEmail(lead.email);
+              const canProspect = hasRealEmail(lead.email) && lead.funnel_status === "new";
+              const alreadyContacted = hasRealEmail(lead.email) && lead.funnel_status !== "new";
               const isSending = sendingId === lead.id;
               return (
                 <TableRow
