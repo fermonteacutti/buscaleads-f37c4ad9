@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FUNNEL_OPTIONS } from "./lead-types";
 import { cn } from "@/lib/utils";
-import { Building2, Mail, Phone, Globe, MapPin, Search, Send } from "lucide-react";
+import { Building2, Mail, Phone, Globe, MapPin, Search, Send, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import LeadDetailSheet from "./LeadDetailSheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -81,7 +81,8 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
           <TableBody>
             {leads.map((lead) => {
               const funnel = funnelLabel(lead.funnel_status);
-              const showProspect = hasRealEmail(lead.email);
+              const canProspect = hasRealEmail(lead.email) && lead.funnel_status === "new";
+              const alreadyContacted = hasRealEmail(lead.email) && lead.funnel_status !== "new";
               const isSending = sendingId === lead.id;
               return (
                 <TableRow
@@ -161,7 +162,7 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
                     </Select>
                   </TableCell>
                   <TableCell className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                    {showProspect && (
+                    {canProspect && (
                       <Button
                         variant="ghost"
                         size="icon"
@@ -172,6 +173,11 @@ export default function LeadsTable({ leads, onStatusChange, onLeadUpdated }: Pro
                       >
                         <Send className={cn("h-4 w-4", isSending && "animate-pulse")} />
                       </Button>
+                    )}
+                    {alreadyContacted && (
+                      <span className="inline-flex items-center justify-center h-8 w-8 text-muted-foreground" title="Já contatado">
+                        <Check className="h-4 w-4" />
+                      </span>
                     )}
                   </TableCell>
                 </TableRow>
