@@ -60,6 +60,7 @@ const App = () => (
                 <Route path="admin" element={<AdminPage />} />
               </Route>
             </Route>
+            <Route path="/descadastro" element={<UnsubscribePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="*" element={<NotFound />} />
