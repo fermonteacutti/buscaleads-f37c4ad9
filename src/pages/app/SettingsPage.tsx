@@ -283,8 +283,7 @@ function IntegrationsTab() {
               {crm.connected ? (
                 <Badge variant="default" className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">Conectado</Badge>
               ) : (
-                <Badge variant="secondary" className="text-muted-foreground">Em breve
-                </Button>
+                <Badge variant="secondary" className="text-muted-foreground">Em breve</Badge>
               )}
             </div>
           ))}
