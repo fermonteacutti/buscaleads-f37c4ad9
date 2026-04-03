@@ -74,6 +74,10 @@ export default function LeadsPage() {
     if (filters.funnelStatus !== "all") {
       result = result.filter((l) => l.funnel_status === filters.funnelStatus);
     }
+    if (filters.city) {
+      const c = filters.city.toLowerCase().trim();
+      result = result.filter((l) => l.city?.toLowerCase().includes(c));
+    }
     if (filters.state) {
       result = result.filter((l) => l.state?.toUpperCase() === filters.state);
     }
