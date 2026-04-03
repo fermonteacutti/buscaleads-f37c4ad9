@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { Key, Copy, Eye, EyeOff, Plus, Trash2, Loader2 } from "lucide-react";
+import { Key, Copy, Eye, EyeOff, Plus, Trash2, Loader2, Lock, ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,12 +46,36 @@ function generateApiKey(): { full: string; prefix: string } {
 
 export default function ApiTab() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [justCreatedKey, setJustCreatedKey] = useState<string | null>(null);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+
+  // Fetch current plan
+  useEffect(() => {
+    if (!user) return;
+    const fetchPlan = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan_id, status, plans(slug)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (data?.plans) {
+        const plans = data.plans as any;
+        setCurrentPlanSlug(plans.slug || null);
+      }
+      setLoadingPlan(false);
+    };
+    fetchPlan();
+  }, [user]);
+
+  const isFreePlan = !currentPlanSlug || currentPlanSlug === "free";
 
   const fetchKeys = useCallback(async () => {
     if (!user) return;
@@ -141,9 +166,45 @@ export default function ApiTab() {
   const activeKeys = keys.filter((k) => k.is_active);
   const revokedKeys = keys.filter((k) => !k.is_active);
 
+  if (loadingPlan) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (isFreePlan) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="rounded-full bg-muted p-4">
+            <Lock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold text-foreground">API não disponível no plano Free</h3>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Disponível a partir do plano Starter. Faça upgrade para acessar a API e integrar seus leads com sistemas externos.
+            </p>
+          </div>
+          <Button onClick={() => navigate("/app/planos")} className="gap-2">
+            <ArrowUpRight className="h-4 w-4" />
+            Fazer upgrade
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Create new key */}
+      {/* Plan info note */}
+      <div className="rounded-md border border-primary/20 bg-primary/5 p-4">
+        <p className="text-sm text-muted-foreground">
+          <strong className="text-foreground">🔑 API disponível</strong> — Você tem acesso à API nos planos Starter, Pro e Business.
+          Gerencie suas chaves abaixo para integrar seus leads com sistemas externos.
+        </p>
+      </div>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
