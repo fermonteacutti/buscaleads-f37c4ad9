@@ -46,12 +46,36 @@ function generateApiKey(): { full: string; prefix: string } {
 
 export default function ApiTab() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [justCreatedKey, setJustCreatedKey] = useState<string | null>(null);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState(true);
+
+  // Fetch current plan
+  useEffect(() => {
+    if (!user) return;
+    const fetchPlan = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("plan_id, status, plans(slug)")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (data?.plans) {
+        const plans = data.plans as any;
+        setCurrentPlanSlug(plans.slug || null);
+      }
+      setLoadingPlan(false);
+    };
+    fetchPlan();
+  }, [user]);
+
+  const isFreePlan = !currentPlanSlug || currentPlanSlug === "free";
 
   const fetchKeys = useCallback(async () => {
     if (!user) return;
