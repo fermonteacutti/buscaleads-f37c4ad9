@@ -92,8 +92,8 @@ const EMAIL_HTML = `
     </td></tr>
     <tr><td style="background-color:#1e3a6e;padding:20px 40px;text-align:center;">
       <p style="margin:0 0 6px 0;font-size:12px;color:#a0b4d0;">Certifica SP — Autoridade Registradora credenciada ICP-Brasil</p>
-      <p style="margin:0;font-size:11px;color:#6b84a0;">Você recebeu este e-mail pois seu escritório foi identificado como potencial parceiro.</p>
-    </td></tr>
+      <p style="margin:0;font-size:11px;color:#6b84a0;">Você recebeu este e-mail pois seu escritório foi identificado como potencial parceiro. <a href="https://ulacfkpqbgkbexnudnts.supabase.co/functions/v1/unsubscribe?email={{EMAIL}}" style="color:#4aad78;text-decoration:none;">Descadastrar</a></p>
+          </td></tr>
   </table>
   </td></tr>
 </table>
@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
         "Authorization": `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
       },
+      const emailHtml = EMAIL_HTML.replace("{{EMAIL}}", encodeURIComponent(to_email));
       body: JSON.stringify({
         from: "Certifica SP <noreply@buscalead.ia.br>",
         to: [to_email],
