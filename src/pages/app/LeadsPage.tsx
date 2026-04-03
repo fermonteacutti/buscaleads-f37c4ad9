@@ -17,12 +17,13 @@ const PAGE_SIZE = 20;
 interface LeadFilters {
   search: string;
   funnelStatus: string;
+  city: string;
   state: string;
   hasEmail: boolean;
   hasPhone: boolean;
 }
 
-const DEFAULT_FILTERS: LeadFilters = { search: "", funnelStatus: "all", state: "", hasEmail: false, hasPhone: false };
+const DEFAULT_FILTERS: LeadFilters = { search: "", funnelStatus: "all", city: "", state: "", hasEmail: false, hasPhone: false };
 
 export default function LeadsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -72,6 +73,10 @@ export default function LeadsPage() {
     }
     if (filters.funnelStatus !== "all") {
       result = result.filter((l) => l.funnel_status === filters.funnelStatus);
+    }
+    if (filters.city) {
+      const c = filters.city.toLowerCase().trim();
+      result = result.filter((l) => l.city?.toLowerCase().includes(c));
     }
     if (filters.state) {
       result = result.filter((l) => l.state?.toUpperCase() === filters.state);
@@ -158,6 +163,13 @@ export default function LeadsPage() {
             maxLength={100}
           />
         </div>
+        <Input
+          placeholder="Cidade"
+          value={filters.city}
+          onChange={(e) => update({ city: e.target.value })}
+          maxLength={50}
+          className="w-40"
+        />
         <Input
           placeholder="UF"
           value={filters.state}
