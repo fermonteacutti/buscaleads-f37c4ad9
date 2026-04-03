@@ -283,12 +283,7 @@ function IntegrationsTab() {
               {crm.connected ? (
                 <Badge variant="default" className="bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))]">Conectado</Badge>
               ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => toast.info(`Integração com ${crm.name} estará disponível em breve!`)}
-                >
-                  Conectar
+                <Badge variant="secondary" className="text-muted-foreground">Em breve
                 </Button>
               )}
             </div>
