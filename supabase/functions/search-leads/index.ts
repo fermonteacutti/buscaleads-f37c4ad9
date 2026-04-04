@@ -217,14 +217,28 @@ Deno.serve(async (req) => {
 
       const addressParts = (place.formatted_address || "").split(",").map((s: string) => s.trim());
 
+      // Extrai cidade e estado corretamente do formato: "Rua X - Bairro, Cidade - UF, CEP, Brasil"
+      let city: string | null = null;
+      let state: string | null = null;
+      const cityStateRaw = addressParts.length >= 3 ? addressParts[addressParts.length - 3] : null;
+      if (cityStateRaw) {
+        const match = cityStateRaw.match(/^(.+?)\s*-\s*([A-Z]{2})$/);
+        if (match) {
+          city = match[1].trim();
+          state = match[2].trim();
+        } else {
+          city = cityStateRaw;
+        }
+      }
+
       leads.push({
         user_id: userId,
         search_id: search_id,
         google_place_id: place.place_id || null,
         company_name: place.name || null,
         address: place.formatted_address || null,
-        city: addressParts.length >= 3 ? addressParts[addressParts.length - 3] : null,
-        state: addressParts.length >= 2 ? addressParts[addressParts.length - 2] : null,
+        city,
+        state,
         phone,
         website,
         source: "google_maps",
