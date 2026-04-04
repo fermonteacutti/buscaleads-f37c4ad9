@@ -17,7 +17,6 @@ const BUSINESS_TYPES = [
   { value: "lojas", label: "Lojas/Varejo", icon: ShoppingBag },
   { value: "educacao", label: "Educação", icon: GraduationCap },
   { value: "industria", label: "Indústria", icon: Building2 },
-  { value: "outros", label: "Outros", icon: MoreHorizontal },
 ];
 
 export default function StepBusinessType() {
