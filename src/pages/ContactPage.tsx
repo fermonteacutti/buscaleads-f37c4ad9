@@ -84,9 +84,9 @@ export default function ContactPage() {
               <h3 className="font-semibold mb-4">Informações de Contato</h3>
               <div className="space-y-4">
                 {[
-                  { icon: Mail, label: "contato@leadscanpro.com.br" },
-                  { icon: Phone, label: "+55 (11) 99999-0000" },
-                  { icon: MapPin, label: "São Paulo, SP — Brasil" },
+                  { icon: Mail, label: "contato@certificasp.com.br" },
+                  { icon: Phone, label: "+55 (19) 99646-3065" },
+                  { icon: MapPin, label: "R. Ipiranga, 337 — Americana, SP" },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Icon className="h-4 w-4 text-primary" />
