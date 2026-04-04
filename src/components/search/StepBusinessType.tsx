@@ -1,16 +1,21 @@
 import { useWizard } from "./SearchWizardContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Building2, ShoppingBag, Utensils, Wrench, GraduationCap, HeartPulse, Briefcase, MoreHorizontal } from "lucide-react";
+import { Building2, ShoppingBag, Utensils, Wrench, GraduationCap, HeartPulse, Briefcase, MoreHorizontal, Calculator, Scale, Home, Stethoscope, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BUSINESS_TYPES = [
-  { value: "restaurantes", label: "Restaurantes", icon: Utensils },
-  { value: "lojas", label: "Lojas/Varejo", icon: ShoppingBag },
+  { value: "contabilidade", label: "Contabilidade", icon: Calculator },
+  { value: "advocacia", label: "Advocacia", icon: Scale },
+  { value: "imobiliarias", label: "Imobiliárias", icon: Home },
+  { value: "clinicas", label: "Clínicas", icon: Stethoscope },
+  { value: "tecnologia", label: "Tecnologia", icon: Monitor },
+  { value: "escritorios", label: "Escritórios", icon: Briefcase },
   { value: "servicos", label: "Serviços", icon: Wrench },
   { value: "saude", label: "Saúde", icon: HeartPulse },
+  { value: "restaurantes", label: "Restaurantes", icon: Utensils },
+  { value: "lojas", label: "Lojas/Varejo", icon: ShoppingBag },
   { value: "educacao", label: "Educação", icon: GraduationCap },
-  { value: "escritorios", label: "Escritórios", icon: Briefcase },
   { value: "industria", label: "Indústria", icon: Building2 },
   { value: "outros", label: "Outros", icon: MoreHorizontal },
 ];
