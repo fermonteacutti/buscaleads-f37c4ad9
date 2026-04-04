@@ -97,7 +97,7 @@ export default function ContactPage() {
             </div>
 
             <a
-              href="https://wa.me/5511999990000?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20LeadScan%20PRO"
+              href="https://wa.me/5519996463065?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20Certifica%20SP"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-6 rounded-xl border border-success/20 bg-success/5 hover:bg-success/10 transition-colors"
