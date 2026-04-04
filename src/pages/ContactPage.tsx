@@ -6,17 +6,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("send-contact-email", {
+        body: { name, email, company, subject, message },
+      });
+
+      if (error) throw error;
+
       toast.success("Mensagem enviada com sucesso! Retornaremos em até 4 horas úteis.");
-    }, 1000);
+      setName("");
+      setEmail("");
+      setCompany("");
+      setSubject("");
+      setMessage("");
+    } catch (err) {
+      console.error("Erro ao enviar:", err);
+      toast.error("Erro ao enviar mensagem. Tente novamente ou entre em contato pelo WhatsApp.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,20 +62,20 @@ export default function ContactPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Nome</label>
-                <Input placeholder="Seu nome" required />
+                <Input placeholder="Seu nome" required value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">E-mail</label>
-                <Input type="email" placeholder="seu@email.com" required />
+                <Input type="email" placeholder="seu@email.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Empresa</label>
-              <Input placeholder="Nome da empresa" />
+              <Input placeholder="Nome da empresa" value={company} onChange={(e) => setCompany(e.target.value)} />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Assunto</label>
-              <Select>
+              <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger><SelectValue placeholder="Selecione o assunto" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="duvida">Dúvida sobre a plataforma</SelectItem>
@@ -67,7 +89,7 @@ export default function ContactPage() {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Mensagem</label>
-              <Textarea placeholder="Como podemos ajudar?" rows={5} required />
+              <Textarea placeholder="Como podemos ajudar?" rows={5} required value={message} onChange={(e) => setMessage(e.target.value)} />
             </div>
             <Button variant="hero" type="submit" className="w-full" disabled={loading}>
               {loading ? "Enviando..." : "Enviar Mensagem"}
