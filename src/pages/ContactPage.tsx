@@ -84,9 +84,9 @@ export default function ContactPage() {
               <h3 className="font-semibold mb-4">Informações de Contato</h3>
               <div className="space-y-4">
                 {[
-                  { icon: Mail, label: "contato@leadscanpro.com.br" },
-                  { icon: Phone, label: "+55 (11) 99999-0000" },
-                  { icon: MapPin, label: "São Paulo, SP — Brasil" },
+                  { icon: Mail, label: "contato@certificasp.com.br" },
+                  { icon: Phone, label: "+55 (19) 99646-3065" },
+                  { icon: MapPin, label: "R. Ipiranga, 337 — Americana, SP" },
                 ].map(({ icon: Icon, label }) => (
                   <div key={label} className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Icon className="h-4 w-4 text-primary" />
@@ -97,7 +97,7 @@ export default function ContactPage() {
             </div>
 
             <a
-              href="https://wa.me/5511999990000?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20LeadScan%20PRO"
+              href="https://wa.me/5519996463065?text=Ol%C3%A1%2C%20tenho%20interesse%20no%20Certifica%20SP"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-6 rounded-xl border border-success/20 bg-success/5 hover:bg-success/10 transition-colors"
@@ -111,7 +111,7 @@ export default function ContactPage() {
 
             <div className="rounded-xl overflow-hidden border border-border h-48">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.1976!2d-46.6523!3d-23.5505!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzAxLjgiUyA0NsKwMzknMDguMyJX!5e0!3m2!1spt-BR!2sbr!4v1234"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3691.5!2d-47.3307!3d-22.7394!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c8a0!2sR.+Ipiranga%2C+337+-+Americana%2C+SP!5e0!3m2!1spt-BR!2sbr!4v1234"
                 width="100%"
                 height="100%"
                 style={{ border: 0 }}
